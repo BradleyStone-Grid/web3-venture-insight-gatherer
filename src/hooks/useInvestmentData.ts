@@ -25,7 +25,9 @@ export const useInvestmentData = (investments: Investment[] = []) => {
     let currentDate = new Date(startDate);
     while (currentDate <= endDate) {
       dates.push(currentDate.toISOString().split("T")[0]);
-      currentDate = new Date(currentDate.setMonth(currentDate.getMonth() + 1));
+      currentDate = new Date(
+        currentDate.setMonth(currentDate.getMonth() + 1)
+      );
     }
 
     return dates;
@@ -43,25 +45,15 @@ export const useInvestmentData = (investments: Investment[] = []) => {
       if (projectInvestments.length === 0) return;
 
       const firstInvestmentDate = projectInvestments[0].date;
-      const lastInvestmentDate = projectInvestments[projectInvestments.length - 1].date;
+      const lastInvestmentDate =
+        projectInvestments[projectInvestments.length - 1].date;
       let accumulatedValue = 0;
 
       dateRange.forEach((date) => {
-        // Before first investment, set value to 0
-        if (date < firstInvestmentDate) {
-          series[project].push({
-            date,
-            price: 0
-          });
-          return;
-        }
-
-        // Find investments on this date
         const investmentsOnDate = projectInvestments.filter(
           (inv) => inv.date === date
         );
 
-        // Add new investments to accumulated value
         if (investmentsOnDate.length > 0) {
           accumulatedValue += investmentsOnDate.reduce(
             (sum, inv) => sum + inv.amount,
@@ -69,17 +61,15 @@ export const useInvestmentData = (investments: Investment[] = []) => {
           );
         }
 
-        // Only apply growth after the last investment date
         if (date > lastInvestmentDate) {
-          // Apply a conservative monthly growth rate (0.5-1%)
-          const monthlyGrowthRate = 0.005 + (Math.sin(new Date(date).getTime()) + 1) * 0.0025;
-          accumulatedValue *= (1 + monthlyGrowthRate);
+          const monthlyGrowthRate =
+            0.005 + (Math.sin(new Date(date).getTime()) + 1) * 0.0025;
+          accumulatedValue = accumulatedValue * (1 + monthlyGrowthRate);
         }
 
-        // Add data point
         series[project].push({
           date,
-          price: Math.round(accumulatedValue)
+          price: Math.round(accumulatedValue),
         });
       });
     });
@@ -88,7 +78,10 @@ export const useInvestmentData = (investments: Investment[] = []) => {
     return series;
   }, [uniqueProjects, dateRange, investments]);
 
-  const getCombinedChartData = (showAll: boolean, selectedInvestments: string[]) => {
+  const getCombinedChartData = (
+    showAll: boolean,
+    selectedInvestments: string[]
+  ) => {
     const activeProjects = showAll ? uniqueProjects : selectedInvestments;
 
     return dateRange.map((date) => {
@@ -98,7 +91,41 @@ export const useInvestmentData = (investments: Investment[] = []) => {
         const projectData = projectTimeSeries[project];
         if (!projectData) return;
 
-        const matchingPoint = projectData.find((d) => d.date === date);
+        let matchingPoint = projectData.find((d) => d.date === date);
+        let lastKnownValue = 0;
+
+        if (!matchingPoint) {
+          for (let i = 0; i < projectData.length; i++) {
+            if (projectData[i].date <= date) {
+              lastKnownValue = projectData[i].price;
+            } else {
+              break;
+            }
+          }
+
+          matchingPoint = { date, price: lastKnownValue };
+
+          if (projectData.filter((d) => d.date <= date).length > 0) {
+            const lastInvestmentDate =
+              projectData.filter((d) => d.date <= date).at(-1)?.date ?? "";
+            const lastInvestmentValue =
+              projectData.filter((d) => d.date <= date).at(-1)?.price ?? 0;
+
+            let accumulatedValue = lastInvestmentValue;
+
+            const dateRangeToApplyGrowth = dateRange.filter(
+              (d) => d > lastInvestmentDate && d <= date
+            );
+
+            dateRangeToApplyGrowth.forEach((d) => {
+              const growthSeed = new Date(d).getTime();
+              const randomGrowth = 0.005 + (Math.sin(growthSeed) + 1) * 0.0025;
+              accumulatedValue *= (1 + randomGrowth);
+            });
+            matchingPoint = { date, price: accumulatedValue };
+          }
+        }
+
         if (matchingPoint) {
           dataPoint[project] = matchingPoint.price;
         }
