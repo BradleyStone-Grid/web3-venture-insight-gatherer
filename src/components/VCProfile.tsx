@@ -1,9 +1,9 @@
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { ExternalLink, TrendingUp, Users, Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { useState } from "react";
 import { VCDetailsView } from "./VCDetailsView";
+import { Badge } from "./ui/badge";
 
 interface PortfolioCompany {
   name: string;
@@ -53,7 +53,7 @@ export function VCProfile({
     <>
       <Card className="overflow-hidden">
         <CardHeader>
-          <div className="flex items-center justify-between">
+          <div className="flex items-start justify-between">
             <div className="flex items-center space-x-4">
               <img src={logo} alt={name} className="h-12 w-12 rounded-full" />
               <div>
@@ -70,12 +70,16 @@ export function VCProfile({
                 </a>
               </div>
             </div>
+            <div className="flex items-center gap-1.5 text-success">
+              <TrendingUp className="h-4 w-4" />
+              <span className="text-sm font-medium">Active Investor</span>
+            </div>
           </div>
-          <p className="text-sm text-muted-foreground">{description}</p>
+          <p className="text-sm text-muted-foreground mt-2">{description}</p>
         </CardHeader>
 
         <CardContent>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2 mb-4">
             {focus.map((tag) => (
               <span key={tag} className="inline-block bg-muted text-muted-foreground text-xs font-medium px-2.5 py-0.5 rounded">
                 {tag}
@@ -83,8 +87,8 @@ export function VCProfile({
             ))}
           </div>
           {investmentStage.length > 0 && (
-            <div className="mt-2">
-              <h4 className="text-sm font-medium">Investment Stages</h4>
+            <div className="mb-4">
+              <h4 className="text-sm font-medium mb-2">Investment Stages</h4>
               <div className="flex flex-wrap gap-2">
                 {investmentStage.map((stage) => (
                   <span key={stage} className="inline-block bg-muted text-muted-foreground text-xs font-medium px-2.5 py-0.5 rounded">

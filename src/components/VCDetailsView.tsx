@@ -40,8 +40,52 @@ export function VCDetailsView({
   description,
   aum,
   website,
-  investments = mockData,
+  investments = [],
 }: VCDetailsViewProps) {
+  // Generate mock price data that aligns with investment dates
+  const mockPriceData = useMemo(() => {
+    if (!investments.length) return [];
+    
+    const startDate = new Date(investments[0].date);
+    const endDate = new Date(investments[investments.length - 1].date);
+    const priceData = [];
+    
+    let currentDate = startDate;
+    let basePrice = 3000; // Starting price
+    
+    while (currentDate <= endDate) {
+      // Add some random variation to price
+      basePrice = basePrice * (1 + (Math.random() - 0.5) * 0.1);
+      
+      priceData.push({
+        date: currentDate.toISOString().split('T')[0],
+        price: Math.round(basePrice),
+      });
+      
+      // Move to next month
+      currentDate = new Date(currentDate.setMonth(currentDate.getMonth() + 1));
+    }
+    
+    return priceData;
+  }, [investments]);
+
+  // Combine investment and price data
+  const combinedChartData = useMemo(() => {
+    if (!investments.length || !mockPriceData.length) return [];
+
+    const priceMap = new Map(mockPriceData.map(item => [item.date, item.price]));
+    const investmentMap = new Map(investments.map(item => [item.date, item]));
+
+    // Use all unique dates from both datasets
+    const allDates = [...new Set([...priceMap.keys(), ...investmentMap.keys()])].sort();
+
+    return allDates.map(date => ({
+      date,
+      price: priceMap.get(date),
+      ...(investmentMap.get(date) || {}),
+    }));
+  }, [investments, mockPriceData]);
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
@@ -83,29 +127,51 @@ export function VCDetailsView({
             <div className="h-[400px]">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart
-                  data={investments}
+                  data={combinedChartData}
                   margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
                 >
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="date" />
-                  <YAxis yAxisId="left" orientation="left" stroke="#8884d8" />
-                  <YAxis yAxisId="right" orientation="right" stroke="#82ca9d" />
+                  <XAxis 
+                    dataKey="date" 
+                    tick={{ fontSize: 12 }}
+                    interval="preserveStartEnd"
+                  />
+                  <YAxis 
+                    yAxisId="left" 
+                    orientation="left" 
+                    stroke="#8884d8"
+                    tick={{ fontSize: 12 }}
+                    tickFormatter={(value) => `$${(value / 1000000).toFixed(1)}M`}
+                  />
+                  <YAxis 
+                    yAxisId="right" 
+                    orientation="right" 
+                    stroke="#82ca9d"
+                    tick={{ fontSize: 12 }}
+                    tickFormatter={(value) => `$${value}`}
+                  />
                   <Tooltip
                     content={({ active, payload }) => {
                       if (active && payload && payload.length) {
                         const data = payload[0].payload;
                         return (
                           <div className="bg-background border rounded-lg p-3 shadow-lg">
-                            <p className="font-medium">{data.project}</p>
-                            <p className="text-sm text-muted-foreground">
-                              Amount: {formatCurrency(data.amount)}
-                            </p>
-                            <p className="text-sm text-muted-foreground">
-                              Asset Price: {formatCurrency(data.assetPrice || 0)}
-                            </p>
-                            <Badge variant="secondary" className="mt-1">
-                              {data.round}
-                            </Badge>
+                            <p className="font-medium">{data.project || 'Price Data'}</p>
+                            {data.amount && (
+                              <p className="text-sm text-muted-foreground">
+                                Amount: {formatCurrency(data.amount)}
+                              </p>
+                            )}
+                            {data.price && (
+                              <p className="text-sm text-muted-foreground">
+                                Asset Price: {formatCurrency(data.price)}
+                              </p>
+                            )}
+                            {data.round && (
+                              <Badge variant="secondary" className="mt-1">
+                                {data.round}
+                              </Badge>
+                            )}
                           </div>
                         );
                       }
@@ -120,13 +186,15 @@ export function VCDetailsView({
                     name="Investment Amount"
                     stroke="#8884d8"
                     activeDot={{ r: 8 }}
+                    dot={{ r: 6 }}
                   />
                   <Line
                     yAxisId="right"
                     type="monotone"
-                    dataKey="assetPrice"
+                    dataKey="price"
                     name="Asset Price"
                     stroke="#82ca9d"
+                    dot={false}
                   />
                 </LineChart>
               </ResponsiveContainer>
