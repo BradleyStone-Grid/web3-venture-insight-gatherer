@@ -2,105 +2,30 @@ import { useState } from "react";
 import { VCProfile } from "@/components/VCProfile";
 import { SearchBar } from "@/components/SearchBar";
 import { CryptoRankKeyInput } from "@/components/CryptoRankKeyInput";
-
-// Mock data - replace with real API data later
-const vcData = [
-  {
-    name: "Andreessen Horowitz",
-    logo: "https://picsum.photos/200",
-    description: "Pioneering venture fund focused on technology companies across all stages.",
-    aum: "35B",
-    focus: ["Web3", "DeFi", "Infrastructure"],
-    website: "https://a16z.com",
-    investments: [
-      {
-        date: "2023-03-15",
-        amount: 3000000,
-        round: "Series A",
-        project: "Layer1 Protocol"
-      },
-      {
-        date: "2023-06-01",
-        amount: 6000000,
-        round: "Series B",
-        project: "DeFi Exchange"
-      },
-      {
-        date: "2023-09-01",
-        amount: 7000000,
-        round: "Series C",
-        project: "Yield Protocol"
-      }
-    ]
-  },
-  {
-    name: "Paradigm",
-    logo: "https://picsum.photos/201",
-    description: "Investment firm focused on supporting crypto/Web3 entrepreneurs.",
-    aum: "15B",
-    focus: ["DeFi", "NFTs", "Gaming"],
-    website: "https://paradigm.xyz",
-    investments: [
-      {
-        date: "2023-01-15",
-        amount: 4000000,
-        round: "Series A",
-        project: "DeFi Protocol"
-      },
-      {
-        date: "2023-03-15",
-        amount: 5000000,
-        round: "Series B",
-        project: "NFT Platform"
-      },
-      {
-        date: "2023-06-01",
-        amount: 6000000,
-        round: "Series A",
-        project: "GameFi Platform"
-      }
-    ]
-  },
-  {
-    name: "Polychain Capital",
-    logo: "https://picsum.photos/202",
-    description: "Leading cryptocurrency investment firm.",
-    aum: "4B",
-    focus: ["Crypto", "DeFi", "Layer 1"],
-    website: "https://polychain.capital",
-    investments: [
-      {
-        date: "2023-03-15",
-        amount: 3000000,
-        round: "Seed",
-        project: "Layer1 Protocol"
-      },
-      {
-        date: "2023-06-01",
-        amount: 6000000,
-        round: "Series A",
-        project: "DeFi Exchange"
-      },
-      {
-        date: "2023-09-01",
-        amount: 7000000,
-        round: "Series B",
-        project: "Yield Protocol"
-      }
-    ]
-  }
-];
+import { useVCData } from "@/hooks/useVCData";
+import { useToast } from "@/hooks/use-toast";
 
 const Index = () => {
   const [searchQuery, setSearchQuery] = useState("");
+  const { data: vcData, isLoading, error } = useVCData();
+  const { toast } = useToast();
 
-  const filteredVCs = vcData.filter((vc) => {
+  // Show error toast if API call fails
+  if (error) {
+    toast({
+      title: "Error",
+      description: "Failed to fetch VC data. Please check your API key.",
+      variant: "destructive",
+    });
+  }
+
+  const filteredVCs = vcData?.filter((vc) => {
     const searchLower = searchQuery.toLowerCase();
     return (
       vc.name.toLowerCase().includes(searchLower) ||
       vc.focus.some((tag) => tag.toLowerCase().includes(searchLower))
     );
-  });
+  }) || [];
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/50 py-12 px-4 sm:px-6 lg:px-8">
@@ -115,16 +40,22 @@ const Index = () => {
         <CryptoRankKeyInput />
         <SearchBar onSearch={setSearchQuery} />
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredVCs.map((vc) => (
-            <VCProfile 
-              key={vc.name} 
-              {...vc}
-            />
-          ))}
-        </div>
+        {isLoading ? (
+          <div className="text-center py-12">
+            <p className="text-lg text-muted-foreground">Loading VC data...</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredVCs.map((vc) => (
+              <VCProfile 
+                key={vc.name} 
+                {...vc}
+              />
+            ))}
+          </div>
+        )}
 
-        {filteredVCs.length === 0 && (
+        {!isLoading && filteredVCs.length === 0 && (
           <div className="text-center py-12">
             <p className="text-lg text-muted-foreground">
               No VCs found matching your search criteria
