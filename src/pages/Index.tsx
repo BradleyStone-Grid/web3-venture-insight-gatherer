@@ -35,48 +35,6 @@ const vcData = [
         amount: 3000000,
         round: "Seed",
         project: "BlockChain Solutions"
-      },
-      {
-        date: "2022-09-15",
-        amount: 4000000,
-        round: "Series B",
-        project: "Crypto Finance Group"
-      },
-      {
-        date: "2022-12-01",
-        amount: 2800000,
-        round: "Series A",
-        project: "Decentralized Apps Inc."
-      },
-      {
-        date: "2023-03-15",
-        amount: 5000000,
-        round: "Series C",
-        project: "NFT Marketplace Co."
-      },
-      {
-        date: "2023-06-01",
-        amount: 3500000,
-        round: "Seed",
-        project: "Web3 Security Solutions"
-      },
-      {
-        date: "2023-09-15",
-        amount: 4500000,
-        round: "Series A",
-        project: "Metaverse Developments"
-      },
-      {
-        date: "2023-12-01",
-        amount: 6000000,
-        round: "Series B",
-        project: "AI Crypto Analytics"
-      },
-      {
-        date: "2024-02-15",
-        amount: 7500000,
-        round: "Series C",
-        project: "Blockchain Gaming Studios"
       }
     ]
   },
@@ -86,7 +44,6 @@ const vcData = [
     description: "Investment firm focused on supporting crypto/Web3 entrepreneurs.",
     aum: "15B",
     focus: ["DeFi", "NFTs", "Gaming"],
-    investments: 87,
     website: "https://paradigm.xyz",
     portfolioCompanies: [
       {
@@ -99,6 +56,20 @@ const vcData = [
         logo: "https://picsum.photos/206",
         profileUrl: "https://magiceden.io"
       }
+    ],
+    investments: [
+      {
+        date: "2023-01-15",
+        amount: 4000000,
+        round: "Series A",
+        project: "DeFi Protocol"
+      },
+      {
+        date: "2023-06-01",
+        amount: 5000000,
+        round: "Series B",
+        project: "NFT Platform"
+      }
     ]
   },
   {
@@ -107,7 +78,6 @@ const vcData = [
     description: "Leading cryptocurrency investment firm.",
     aum: "4B",
     focus: ["Crypto", "DeFi", "Layer 1"],
-    investments: 56,
     website: "https://polychain.capital",
     portfolioCompanies: [
       {
@@ -120,8 +90,22 @@ const vcData = [
         logo: "https://picsum.photos/208",
         profileUrl: "https://dydx.exchange"
       }
+    ],
+    investments: [
+      {
+        date: "2023-03-15",
+        amount: 3000000,
+        round: "Seed",
+        project: "Layer1 Protocol"
+      },
+      {
+        date: "2023-09-01",
+        amount: 6000000,
+        round: "Series A",
+        project: "DeFi Exchange"
+      }
     ]
-  },
+  }
 ];
 
 const Index = () => {

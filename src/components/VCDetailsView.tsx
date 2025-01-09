@@ -44,7 +44,7 @@ export function VCDetailsView({
 
   // Generate date range for the chart
   const mockPriceData = useMemo(() => {
-    if (!investments.length) return [];
+    if (!investments || investments.length === 0) return [];
     
     const startDate = new Date(investments[0].date);
     const endDate = new Date(investments[investments.length - 1].date);
@@ -65,7 +65,7 @@ export function VCDetailsView({
 
   // Create individual time series for each project
   const projectTimeSeries = useMemo(() => {
-    if (!investments.length) return {};
+    if (!investments || investments.length === 0) return {};
 
     const series: { [key: string]: any[] } = {};
     
