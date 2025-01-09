@@ -15,6 +15,7 @@ interface InvestmentChartProps {
   data: any[];
   uniqueProjects: string[];
   selectedInvestments: string[];
+  isLoading?: boolean; // Added optional isLoading prop
 }
 
 const COLORS = [
@@ -28,7 +29,12 @@ const COLORS = [
   "#0088FE",
 ];
 
-export function InvestmentChart({ data, uniqueProjects, selectedInvestments, isLoading, }: InvestmentChartProps) {
+export function InvestmentChart({ 
+  data, 
+  uniqueProjects, 
+  selectedInvestments, 
+  isLoading = false, // Added with default value
+}: InvestmentChartProps) {
   console.log("Chart Data:", data);
   console.log("Unique Projects:", uniqueProjects);
   console.log("Selected Investments:", selectedInvestments);
