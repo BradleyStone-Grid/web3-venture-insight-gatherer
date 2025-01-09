@@ -4,6 +4,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsi
 import { formatCurrency } from "@/lib/utils";
 import { Badge } from "./ui/badge";
 import { ExternalLink, Globe } from "lucide-react";
+import { useMemo } from 'react';  // Added this import
 
 interface Investment {
   date: string;
@@ -23,14 +24,6 @@ interface VCDetailsViewProps {
   website: string;
   investments: Investment[];
 }
-
-const mockData = [
-  { date: "2023-01", amount: 1000000, round: "Seed", project: "Project A", assetPrice: 2000 },
-  { date: "2023-03", amount: 2000000, round: "Series A", project: "Project B", assetPrice: 2200 },
-  { date: "2023-06", amount: 3000000, round: "Series B", project: "Project C", assetPrice: 2400 },
-  { date: "2023-09", amount: 4000000, round: "Series C", project: "Project D", assetPrice: 2600 },
-  { date: "2023-12", amount: 5000000, round: "Series D", project: "Project E", assetPrice: 2800 },
-];
 
 export function VCDetailsView({
   open,
@@ -232,4 +225,3 @@ export function VCDetailsView({
       </DialogContent>
     </Dialog>
   );
-}
