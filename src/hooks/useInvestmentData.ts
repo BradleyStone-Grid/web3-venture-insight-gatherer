@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from "react";
+import { useMemo } from "react";
 
 interface Investment {
   date: string;
@@ -8,8 +8,6 @@ interface Investment {
 }
 
 export const useInvestmentData = (investments: Investment[] = []) => {
-  const [isLoading, setIsLoading] = useState(true);
-
   // Calculate unique projects
   const uniqueProjects = useMemo(
     () => [...new Set(investments.map((inv) => inv.project))],
@@ -29,25 +27,21 @@ export const useInvestmentData = (investments: Investment[] = []) => {
     let currentDate = new Date(startDate);
     while (currentDate <= endDate) {
       dates.push(currentDate.toISOString().split("T")[0]);
-      currentDate = new Date(
-        currentDate.setMonth(currentDate.getMonth() + 1)
-      );
+      currentDate = new Date(currentDate.setMonth(currentDate.getMonth() + 1));
     }
 
-    // Ensure dates are sorted
     dates.sort();
-
     return dates;
   }, [investments]);
 
   // Create project time series with accumulated investments and growth
   const projectTimeSeries = useMemo(() => {
-    setIsLoading(true);
     const series: { [key: string]: { date: string; price: number }[] } = {};
 
-    // Initialize series for each project
     uniqueProjects.forEach((project) => {
       series[project] = [];
+      
+      // Get all investments for this project, sorted by date
       const projectInvestments = investments
         .filter((inv) => inv.project === project)
         .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
@@ -56,43 +50,45 @@ export const useInvestmentData = (investments: Investment[] = []) => {
 
       const firstInvestmentDate = projectInvestments[0].date;
       const lastInvestmentDate = projectInvestments[projectInvestments.length - 1].date;
+
+      // Initialize accumulated value
       let accumulatedValue = 0;
 
+      // Process each date in the range
       dateRange.forEach((date) => {
-        // Find investments on this date
-        const investmentsOnDate = projectInvestments.filter((inv) => inv.date === date);
+        // Before first investment, value is 0
+        if (date < firstInvestmentDate) {
+          series[project].push({ date, price: 0 });
+          return;
+        }
 
-        // Add new investments to accumulated value
+        // Add any new investments on this date
+        const investmentsOnDate = projectInvestments.filter((inv) => inv.date === date);
         if (investmentsOnDate.length > 0) {
           accumulatedValue += investmentsOnDate.reduce((sum, inv) => sum + inv.amount, 0);
         }
 
-        // Only apply growth after the last investment date
-        if (date > lastInvestmentDate) {
-          // Calculate the number of months between the current date and the last investment date
+        // Apply growth only after the last investment date
+        if (date > lastInvestmentDate && accumulatedValue > 0) {
           const monthsSinceLastInvestment = Math.floor(
-            (new Date(date).getTime() - new Date(lastInvestmentDate).getTime()) / (1000 * 60 * 60 * 24 * 30)
+            (new Date(date).getTime() - new Date(lastInvestmentDate).getTime()) / 
+            (1000 * 60 * 60 * 24 * 30)
           );
-
-          // Apply the monthly growth rate for each month since the last investment
-          let growthAdjustedValue = accumulatedValue;
-          for (let i = 0; i < monthsSinceLastInvestment; i++) {
-            const monthlyGrowthRate = 0.005 + (Math.random() * 0.005);
-            growthAdjustedValue *= (1 + monthlyGrowthRate);
-          }
-
-          // Add data point with growth applied
-          series[project].push({
-            date,
-            price: Math.round(growthAdjustedValue),
-          });
-        } else {
-          // Add data point
-          series[project].push({
-            date,
-            price: Math.round(accumulatedValue),
-          });
+          
+          // Apply a conservative monthly growth rate (0.5-1%)
+          const baseGrowthRate = 0.005; // 0.5% base rate
+          const variableGrowth = Math.sin(new Date(date).getTime()) * 0.0025; // ±0.25% variation
+          const monthlyGrowthRate = baseGrowthRate + Math.max(0, variableGrowth);
+          
+          // Compound the growth for each month since last investment
+          accumulatedValue *= Math.pow(1 + monthlyGrowthRate, monthsSinceLastInvestment);
         }
+
+        // Add the data point
+        series[project].push({
+          date,
+          price: Math.round(accumulatedValue)
+        });
       });
     });
 
@@ -100,18 +96,8 @@ export const useInvestmentData = (investments: Investment[] = []) => {
     return series;
   }, [uniqueProjects, dateRange, investments]);
 
-  useEffect(() => {
-    if (projectTimeSeries) {
-      setIsLoading(false);
-    }
-  }, [projectTimeSeries]);
-
   // Combine project data for the chart
   const getCombinedChartData = (showAll: boolean, selectedInvestments: string[]) => {
-    if (isLoading) {
-      return []; // Return empty array while loading
-    }
-
     const activeProjects = showAll ? uniqueProjects : selectedInvestments;
 
     return dateRange.map((date) => {
@@ -121,25 +107,19 @@ export const useInvestmentData = (investments: Investment[] = []) => {
         const projectData = projectTimeSeries[project];
         if (!projectData) return;
 
-        // Find the closest data point before or on the current date
-        let matchingPoint = projectData.find((d) => d.date === date);
-
-        if (!matchingPoint) {
-          // Find the last known value before this date
-          let lastKnownValue = 0;
-          for (let i = projectData.length - 1; i >= 0; i--) {
-            if (projectData[i].date <= date) {
-              lastKnownValue = projectData[i].price;
-              break;
-            }
-          }
-
-          // Use the last known value for the current date
-          matchingPoint = { date, price: lastKnownValue };
-        }
-
+        // Find exact matching point or interpolate
+        const matchingPoint = projectData.find((d) => d.date === date);
+        
         if (matchingPoint) {
           dataPoint[project] = matchingPoint.price;
+        } else {
+          // Find the last known value before this date
+          const previousPoints = projectData.filter((d) => d.date <= date);
+          if (previousPoints.length > 0) {
+            dataPoint[project] = previousPoints[previousPoints.length - 1].price;
+          } else {
+            dataPoint[project] = 0;
+          }
         }
       });
 
@@ -151,6 +131,5 @@ export const useInvestmentData = (investments: Investment[] = []) => {
     uniqueProjects,
     dateRange,
     getCombinedChartData,
-    isLoading,
   };
 };
