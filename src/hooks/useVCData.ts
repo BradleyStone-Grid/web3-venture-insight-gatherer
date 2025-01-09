@@ -24,6 +24,8 @@ interface VC {
   investments: FundingRound[];
   investmentStage?: string[];
   portfolioCompanies?: PortfolioCompany[];
+  status?: string;
+  jurisdiction?: string;
 }
 
 export function useVCData() {
@@ -49,23 +51,33 @@ export function useVCData() {
             project: inv.project?.name || "Unknown Project",
           }));
 
-          // Process portfolio companies
+          // Process portfolio companies with additional metadata
           const portfolioCompanies = (fund.portfolio || []).map((company: any) => ({
             name: company.name || "Unknown Company",
             logo: company.image?.small || "https://picsum.photos/200",
             profileUrl: company.links?.website || "#",
+            sector: company.categories || [],
+            investmentDate: company.investmentDate || null,
+            investmentStage: company.stage || "Undisclosed"
           }));
 
-          // Extract investment stages
-          const investmentStage = fund.investmentStages || [];
+          // Extract investment stages from both portfolio and direct data
+          const investmentStage = Array.from(new Set([
+            ...(fund.investmentStages || []),
+            ...portfolioCompanies.map(pc => pc.investmentStage)
+          ])).filter(Boolean);
 
-          // Calculate total AUM
+          // Calculate and format AUM with proper scaling
           const aumValue = typeof fund.aum === 'number' ? fund.aum : 0;
           const formattedAum = aumValue >= 1e9 
             ? `$${(aumValue / 1e9).toFixed(1)}B`
             : aumValue >= 1e6
             ? `$${(aumValue / 1e6).toFixed(1)}M`
             : `$${(aumValue / 1e3).toFixed(1)}K`;
+
+          // Calculate investment metrics
+          const totalInvestments = investments.length;
+          const activeStatus = totalInvestments > 0 ? "Active Investor" : "Inactive";
 
           return {
             name: fund.name || "Unnamed Fund",
@@ -77,6 +89,8 @@ export function useVCData() {
             investments,
             investmentStage,
             portfolioCompanies,
+            status: fund.status || activeStatus,
+            jurisdiction: fund.location || "Unknown Location"
           };
         });
       } catch (error) {
