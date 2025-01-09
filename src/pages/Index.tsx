@@ -25,28 +25,22 @@ const vcData = [
     ],
     investments: [
       {
-        date: "2022-03-15",
-        amount: 2500000,
-        round: "Series A",
-        project: "Innovate Protocol"
-      },
-      {
-        date: "2022-06-01",
+        date: "2023-03-15",
         amount: 3000000,
-        round: "Seed",
-        project: "BlockChain Solutions"
+        round: "Series A",
+        project: "Layer1 Protocol"
       },
       {
-        date: "2022-09-15",
-        amount: 4000000,
+        date: "2023-06-01",
+        amount: 6000000,
         round: "Series B",
-        project: "Crypto Finance Group"
+        project: "DeFi Exchange"
       },
       {
-        date: "2023-01-15",
-        amount: 5000000,
+        date: "2023-09-01",
+        amount: 7000000,
         round: "Series C",
-        project: "NFT Marketplace Co."
+        project: "Yield Protocol"
       }
     ]
   },
