@@ -82,7 +82,7 @@ export function InvestmentChart({ data, uniqueProjects, selectedInvestments }: I
                   stroke={COLORS[index % COLORS.length]}
                   dot={{ r: 4 }}
                   strokeWidth={2}
-                  connectNulls
+                  connectNulls={false}
                 />
               )
             ))}

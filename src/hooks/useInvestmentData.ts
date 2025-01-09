@@ -33,39 +33,44 @@ export const useInvestmentData = (investments: Investment[] = []) => {
 
   // Create project time series with accumulated investments and growth
   const projectTimeSeries = useMemo(() => {
-    const series: { [key: string]: { date: string; price: number }[] } = {};
+    const series: { [key: string]: { date: string; price: number | null }[] } = {};
     
     uniqueProjects.forEach(project => {
-      series[project] = dateRange.map(date => ({
-        date,
-        price: 0
-      }));
-
       const projectInvestments = investments
         .filter(inv => inv.project === project)
         .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
+      if (projectInvestments.length === 0) return;
+
+      const firstInvestmentDate = projectInvestments[0].date;
       let accumulatedValue = 0;
       
-      dateRange.forEach((date, index) => {
-        const investmentsOnDate = projectInvestments.filter(inv => inv.date === date);
-        
-        if (investmentsOnDate.length > 0) {
-          accumulatedValue += investmentsOnDate.reduce((sum, inv) => sum + inv.amount, 0);
-        }
-        
-        if (accumulatedValue > 0) {
-          series[project][index].price = Math.round(accumulatedValue);
+      series[project] = dateRange
+        .filter(date => date >= firstInvestmentDate)
+        .map(date => {
+          const investmentsOnDate = projectInvestments.filter(inv => inv.date === date);
           
-          if (index < dateRange.length - 1) {
+          if (investmentsOnDate.length > 0) {
+            accumulatedValue += investmentsOnDate.reduce((sum, inv) => sum + inv.amount, 0);
+          }
+
+          const dataPoint = {
+            date,
+            price: Math.round(accumulatedValue)
+          };
+
+          // Apply growth for future dates
+          if (date !== dateRange[dateRange.length - 1]) {
             const growthSeed = new Date(date).getTime();
-            const randomGrowth = (Math.sin(growthSeed) + 1) * 0.1;
+            const randomGrowth = (Math.sin(growthSeed) + 1) * 0.05; // 0% to 10% growth
             accumulatedValue *= (1 + randomGrowth);
           }
-        }
-      });
+
+          return dataPoint;
+        });
     });
 
+    console.log("Project Time Series:", series);
     return series;
   }, [uniqueProjects, dateRange, investments]);
 
@@ -78,8 +83,12 @@ export const useInvestmentData = (investments: Investment[] = []) => {
       
       activeProjects.forEach(project => {
         const projectData = projectTimeSeries[project];
+        if (!projectData) return;
+        
         const matchingPoint = projectData.find(d => d.date === date);
-        dataPoint[project] = matchingPoint?.price || 0;
+        if (matchingPoint) {
+          dataPoint[project] = matchingPoint.price;
+        }
       });
       
       return dataPoint;
