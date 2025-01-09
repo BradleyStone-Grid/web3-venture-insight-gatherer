@@ -8,6 +8,12 @@ interface FundingRound {
   project: string;
 }
 
+interface PortfolioCompany {
+  name: string;
+  logo: string;
+  profileUrl: string;
+}
+
 interface VC {
   name: string;
   logo: string;
@@ -16,6 +22,8 @@ interface VC {
   focus: string[];
   website: string;
   investments: FundingRound[];
+  investmentStage?: string[];
+  portfolioCompanies?: PortfolioCompany[];
 }
 
 export function useVCData() {
@@ -32,20 +40,45 @@ export function useVCData() {
         console.log("Raw CryptoRank response:", response);
 
         // Transform the API response to match our VC interface
-        return response.data.map((fund: any) => ({
-          name: fund.name,
-          logo: fund.image?.small || "https://picsum.photos/200", // Fallback image
-          description: fund.description || "Investment firm focused on blockchain and crypto projects.",
-          aum: `${(fund.aum / 1e9).toFixed(1)}B`, // Convert to billions
-          focus: fund.categories || ["Crypto", "Blockchain"],
-          website: fund.links?.website || "#",
-          investments: (fund.investments || []).map((inv: any) => ({
+        return response.data.map((fund: any) => {
+          // Process investments data
+          const investments = (fund.investments || []).map((inv: any) => ({
             date: new Date(inv.date).toISOString(),
-            amount: inv.amount,
+            amount: inv.amount || 0,
             round: inv.stage || "Undisclosed",
-            project: inv.project.name,
-          })),
-        }));
+            project: inv.project?.name || "Unknown Project",
+          }));
+
+          // Process portfolio companies
+          const portfolioCompanies = (fund.portfolio || []).map((company: any) => ({
+            name: company.name || "Unknown Company",
+            logo: company.image?.small || "https://picsum.photos/200",
+            profileUrl: company.links?.website || "#",
+          }));
+
+          // Extract investment stages
+          const investmentStage = fund.investmentStages || [];
+
+          // Calculate total AUM
+          const aumValue = typeof fund.aum === 'number' ? fund.aum : 0;
+          const formattedAum = aumValue >= 1e9 
+            ? `$${(aumValue / 1e9).toFixed(1)}B`
+            : aumValue >= 1e6
+            ? `$${(aumValue / 1e6).toFixed(1)}M`
+            : `$${(aumValue / 1e3).toFixed(1)}K`;
+
+          return {
+            name: fund.name || "Unnamed Fund",
+            logo: fund.image?.small || "https://picsum.photos/200",
+            description: fund.description || "Investment firm focused on blockchain and crypto projects.",
+            aum: formattedAum,
+            focus: fund.categories || ["Crypto", "Blockchain"],
+            website: fund.links?.website || "#",
+            investments,
+            investmentStage,
+            portfolioCompanies,
+          };
+        });
       } catch (error) {
         console.error("Error fetching VC data:", error);
         throw error;
