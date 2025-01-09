@@ -37,7 +37,7 @@ export const useInvestmentData = (investments: Investment[] = []) => {
     return Array.from(dates).sort();
   }, [investments]);
 
-  // Create project time series with accumulated investments and growth
+  // Create project time series with accumulated investments and realistic growth/decline
   const projectTimeSeries = useMemo(() => {
     console.log("Processing investment data...");
     const series: { [key: string]: { date: string; price: number }[] } = {};
@@ -54,7 +54,6 @@ export const useInvestmentData = (investments: Investment[] = []) => {
       const firstInvestmentDate = projectInvestments[0].date;
       let accumulatedValue = 0;
 
-      // Only start tracking from first investment date
       dateRange
         .filter(date => date >= firstInvestmentDate)
         .forEach((date) => {
@@ -70,19 +69,20 @@ export const useInvestmentData = (investments: Investment[] = []) => {
             );
           }
 
-          // Apply growth after initial investment
+          // Apply more realistic growth/decline after initial investment
           if (accumulatedValue > 0) {
             const monthsSinceLastInvestment = Math.floor(
               (new Date(date).getTime() - new Date(firstInvestmentDate).getTime()) / 
               (1000 * 60 * 60 * 24 * 30.44)
             );
             
-            // Apply monthly growth with project-specific variability
-            const baseGrowthRate = 0.01; // 1% base monthly growth
-            const projectRiskFactor = (uniqueProjects.indexOf(project) + 1) * 0.002;
-            const monthlyGrowthRate = baseGrowthRate + projectRiskFactor;
+            // Apply monthly growth/decline with project-specific variability
+            const baseGrowthRate = 0.005; // 0.5% base monthly growth
+            const projectRiskFactor = (uniqueProjects.indexOf(project) + 1) * 0.001;
+            const volatilityFactor = Math.sin(monthsSinceLastInvestment * 0.5) * projectRiskFactor;
+            const monthlyRate = baseGrowthRate + volatilityFactor;
             
-            const growthMultiplier = Math.pow(1 + monthlyGrowthRate, monthsSinceLastInvestment);
+            const growthMultiplier = Math.pow(1 + monthlyRate, monthsSinceLastInvestment);
             accumulatedValue *= growthMultiplier;
           }
 
@@ -107,7 +107,6 @@ export const useInvestmentData = (investments: Investment[] = []) => {
     const activeProjects = showAll ? uniqueProjects : selectedInvestments;
     const chartData: any[] = [];
 
-    // Only include dates where at least one project has data
     const relevantDates = new Set<string>();
     activeProjects.forEach(project => {
       const projectData = projectTimeSeries[project];

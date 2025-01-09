@@ -38,17 +38,21 @@ export function InvestmentChart({
   console.log("Chart Render - Data:", data);
   console.log("Chart Render - Selected Projects:", selectedInvestments);
   
-  // Calculate the maximum value from the data for all selected investments
-  const maxValue = Math.max(
-    ...data.flatMap(entry => 
-      Object.entries(entry)
-        .filter(([key]) => key !== 'date' && selectedInvestments.includes(key))
-        .map(([, value]) => typeof value === 'number' ? value : 0)
-    )
+  // Calculate the value range from the data
+  const values = data.flatMap(entry => 
+    Object.entries(entry)
+      .filter(([key]) => key !== 'date' && selectedInvestments.includes(key))
+      .map(([, value]) => typeof value === 'number' ? value : 0)
   );
-
-  // Round up to the nearest million for the domain max
-  const domainMax = Math.ceil(maxValue / 1000000) * 1000000;
+  
+  const maxValue = Math.max(...values);
+  const minValue = Math.min(...values);
+  
+  // Calculate domain with padding and smoothing
+  const valueRange = maxValue - minValue;
+  const padding = valueRange * 0.1; // 10% padding
+  const domainMax = Math.ceil((maxValue + padding) / 100000) * 100000;
+  const domainMin = Math.floor((minValue - padding) / 100000) * 100000;
   
   return (
     <Card className="p-4">
@@ -72,13 +76,17 @@ export function InvestmentChart({
             <YAxis 
               tick={{ fontSize: 12 }}
               tickFormatter={(value) => {
-                if (typeof value === 'number' && value >= 1000000) {
-                  return `$${(value / 1000000).toFixed(1)}M`;
+                if (typeof value === 'number') {
+                  const absValue = Math.abs(value);
+                  if (absValue >= 1000000) {
+                    return `$${(value / 1000000).toFixed(1)}M`;
+                  }
+                  return `$${(value / 1000).toFixed(1)}K`;
                 }
-                return typeof value === 'number' ? `$${(value / 1000).toFixed(1)}K` : '0';
+                return '0';
               }}
               width={80}
-              domain={[0, domainMax]}
+              domain={[domainMin, domainMax]}
             />
             <Tooltip
               content={({ active, payload, label }) => {
@@ -92,7 +100,7 @@ export function InvestmentChart({
                         })}
                       </p>
                       {payload
-                        .filter(entry => typeof entry.value === 'number' && entry.value > 0)
+                        .filter(entry => typeof entry.value === 'number')
                         .sort((a, b) => {
                           const aValue = typeof a.value === 'number' ? a.value : 0;
                           const bValue = typeof b.value === 'number' ? b.value : 0;
