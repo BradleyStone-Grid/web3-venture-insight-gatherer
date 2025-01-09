@@ -33,8 +33,9 @@ export const useInvestmentData = (investments: Investment[] = []) => {
 
   // Create project time series with accumulated investments and growth
   const projectTimeSeries = useMemo(() => {
-    const series: { [key: string]: { date: string; price: number | null }[] } = {};
+    const series: Record<string, { date: string; price: number | null }[]> = {};
     
+    // Initialize series for each project
     uniqueProjects.forEach(project => {
       const projectInvestments = investments
         .filter(inv => inv.project === project)
@@ -45,18 +46,22 @@ export const useInvestmentData = (investments: Investment[] = []) => {
       const firstInvestmentDate = projectInvestments[0].date;
       let accumulatedValue = 0;
       
+      // Create series for this project starting from its first investment
       series[project] = dateRange
         .filter(date => date >= firstInvestmentDate)
         .map(date => {
+          // Find investments on this date
           const investmentsOnDate = projectInvestments.filter(inv => inv.date === date);
           
+          // Add new investments to accumulated value
           if (investmentsOnDate.length > 0) {
             accumulatedValue += investmentsOnDate.reduce((sum, inv) => sum + inv.amount, 0);
           }
 
+          // Create data point
           const dataPoint = {
             date,
-            price: Math.round(accumulatedValue)
+            price: accumulatedValue > 0 ? Math.round(accumulatedValue) : null
           };
 
           // Apply growth for future dates
@@ -79,14 +84,14 @@ export const useInvestmentData = (investments: Investment[] = []) => {
     const activeProjects = showAll ? uniqueProjects : selectedInvestments;
     
     return dateRange.map(date => {
-      const dataPoint: any = { date };
+      const dataPoint: Record<string, any> = { date };
       
       activeProjects.forEach(project => {
         const projectData = projectTimeSeries[project];
         if (!projectData) return;
         
         const matchingPoint = projectData.find(d => d.date === date);
-        if (matchingPoint) {
+        if (matchingPoint && matchingPoint.price !== null) {
           dataPoint[project] = matchingPoint.price;
         }
       });
