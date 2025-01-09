@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { VCProfile } from "@/components/VCProfile";
 import { SearchBar } from "@/components/SearchBar";
 import { CryptoRankKeyInput } from "@/components/CryptoRankKeyInput";
@@ -10,14 +10,16 @@ const Index = () => {
   const { data: vcData, isLoading, error } = useVCData();
   const { toast } = useToast();
 
-  // Show error toast if API call fails
-  if (error) {
-    toast({
-      title: "Error",
-      description: "Failed to fetch VC data. Please check your API key.",
-      variant: "destructive",
-    });
-  }
+  // Handle error with useEffect instead of in render
+  useEffect(() => {
+    if (error) {
+      toast({
+        title: "Error",
+        description: "Failed to fetch VC data. Please check your API key.",
+        variant: "destructive",
+      });
+    }
+  }, [error, toast]);
 
   const filteredVCs = vcData?.filter((vc) => {
     const searchLower = searchQuery.toLowerCase();

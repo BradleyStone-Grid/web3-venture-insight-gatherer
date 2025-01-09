@@ -23,20 +23,24 @@ export const fetchCryptoRankData = async (endpoint: string, params: Record<strin
     api_key: apiKey,
   });
 
-  console.log('Fetching CryptoRank data:', `https://api.cryptorank.io/v0${endpoint}?${queryParams}`);
+  const url = `https://api.cryptorank.io/v0${endpoint}?${queryParams}`;
+  console.log('Fetching CryptoRank data:', url);
   
-  const response = await fetch(
-    `https://api.cryptorank.io/v0${endpoint}?${queryParams}`,
-    {
+  try {
+    const response = await fetch(url, {
       headers: {
         'Accept': 'application/json',
       },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Failed to fetch data from CryptoRank');
     }
-  );
 
-  if (!response.ok) {
-    throw new Error('Failed to fetch data from CryptoRank');
+    return response.json();
+  } catch (error) {
+    console.error('CryptoRank API error:', error);
+    throw error;
   }
-
-  return response.json();
 };
