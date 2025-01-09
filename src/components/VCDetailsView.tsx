@@ -53,88 +53,85 @@ export function VCDetailsView({
   );
 
   // Generate complete date range for the chart
-  const mockPriceData = useMemo(() => {
+  const dateRange = useMemo(() => {
     if (!investments || investments.length === 0) return [];
     
-    // Find the earliest investment date
     const startDate = new Date(Math.min(...investments.map(inv => new Date(inv.date).getTime())));
     const endDate = new Date();
-    const priceData = [];
+    const dates = [];
     
-    let currentDate = startDate;
-    
+    let currentDate = new Date(startDate);
     while (currentDate <= endDate) {
-      priceData.push({
-        date: currentDate.toISOString().split('T')[0],
-      });
-      
+      dates.push(currentDate.toISOString().split('T')[0]);
       currentDate = new Date(currentDate.setMonth(currentDate.getMonth() + 1));
     }
     
-    return priceData;
+    return dates;
   }, [investments]);
 
-  // Create individual time series for each project
+  // Create project time series with accumulated investments and growth
   const projectTimeSeries = useMemo(() => {
-    if (!investments || investments.length === 0) return {};
-
-    const series: { [key: string]: any[] } = {};
+    const series: { [key: string]: { date: string; price: number }[] } = {};
     
-    // Initialize series for each project with zero values
+    // Initialize series for each project
     uniqueProjects.forEach(project => {
-      series[project] = mockPriceData.map(pd => ({
-        date: pd.date,
+      series[project] = dateRange.map(date => ({
+        date,
         price: 0
       }));
 
-      // Find all investments for this project
+      // Get all investments for this project
       const projectInvestments = investments
         .filter(inv => inv.project === project)
         .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
-      // Process each investment date
-      projectInvestments.forEach(inv => {
-        const startIndex = series[project].findIndex(d => d.date === inv.date);
+      let accumulatedValue = 0;
+      
+      // Process each date in the range
+      dateRange.forEach((date, index) => {
+        // Find any investments made on this date
+        const investmentsOnDate = projectInvestments.filter(inv => inv.date === date);
         
-        if (startIndex !== -1) {
-          let currentValue = inv.amount;
+        // Add new investments to accumulated value
+        if (investmentsOnDate.length > 0) {
+          accumulatedValue += investmentsOnDate.reduce((sum, inv) => sum + inv.amount, 0);
+        }
+        
+        // Set the value for this date
+        if (accumulatedValue > 0) {
+          series[project][index].price = Math.round(accumulatedValue);
           
-          // If there was a previous value, add to it instead of replacing
-          if (startIndex > 0 && series[project][startIndex - 1].price > 0) {
-            currentValue += series[project][startIndex - 1].price;
-          }
-          
-          // Fill in values from this investment date onwards
-          for (let i = startIndex; i < series[project].length; i++) {
-            series[project][i].price = Math.round(currentValue);
-            // Add random growth between -5% to +15%
-            currentValue = currentValue * (1 + (Math.random() * 0.20 - 0.05));
+          // Apply growth only if we're not on the last date
+          if (index < dateRange.length - 1) {
+            // Generate consistent growth based on the date
+            const growthSeed = new Date(date).getTime();
+            const randomGrowth = (Math.sin(growthSeed) + 1) * 0.1; // 0% to 20% growth
+            accumulatedValue *= (1 + randomGrowth);
           }
         }
       });
     });
 
+    console.log("Project Time Series:", series);
     return series;
-  }, [investments, mockPriceData, uniqueProjects]);
+  }, [uniqueProjects, dateRange, investments]);
 
   // Combine project data for the chart
   const combinedChartData = useMemo(() => {
     const activeProjects = showAll ? uniqueProjects : selectedInvestments;
     
-    return mockPriceData.map(pricePoint => {
-      const dataPoint: any = { date: pricePoint.date };
+    return dateRange.map(date => {
+      const dataPoint: any = { date };
       
       activeProjects.forEach(project => {
-        const series = projectTimeSeries[project];
-        if (series) {
-          const matchingPoint = series.find(s => s.date === pricePoint.date);
-          dataPoint[project] = matchingPoint?.price || 0;
-        }
+        const projectData = projectTimeSeries[project];
+        const matchingPoint = projectData.find(d => d.date === date);
+        dataPoint[project] = matchingPoint?.price || 0;
       });
       
       return dataPoint;
     });
-  }, [mockPriceData, projectTimeSeries, showAll, selectedInvestments, uniqueProjects]);
+  }, [dateRange, projectTimeSeries, showAll, selectedInvestments, uniqueProjects]);
 
   console.log("Chart Data:", combinedChartData);
   console.log("Unique Projects:", uniqueProjects);
