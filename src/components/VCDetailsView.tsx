@@ -86,23 +86,32 @@ export function VCDetailsView({
         date: pd.date,
         price: 0
       }));
-    });
 
-    // Process each investment and generate subsequent values
-    investments.forEach(inv => {
-      const projectSeries = series[inv.project];
-      const startIndex = projectSeries.findIndex(d => d.date === inv.date);
-      
-      if (startIndex !== -1) {
-        let currentValue = inv.amount;
+      // Find all investments for this project
+      const projectInvestments = investments
+        .filter(inv => inv.project === project)
+        .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+      // Process each investment date
+      projectInvestments.forEach(inv => {
+        const startIndex = series[project].findIndex(d => d.date === inv.date);
         
-        // Fill in values from investment date onwards
-        for (let i = startIndex; i < projectSeries.length; i++) {
-          projectSeries[i].price = Math.round(currentValue);
-          // Add random growth between -5% to +15%
-          currentValue = currentValue * (1 + (Math.random() * 0.20 - 0.05));
+        if (startIndex !== -1) {
+          let currentValue = inv.amount;
+          
+          // If there was a previous value, add to it instead of replacing
+          if (startIndex > 0 && series[project][startIndex - 1].price > 0) {
+            currentValue += series[project][startIndex - 1].price;
+          }
+          
+          // Fill in values from this investment date onwards
+          for (let i = startIndex; i < series[project].length; i++) {
+            series[project][i].price = Math.round(currentValue);
+            // Add random growth between -5% to +15%
+            currentValue = currentValue * (1 + (Math.random() * 0.20 - 0.05));
+          }
         }
-      }
+      });
     });
 
     return series;
