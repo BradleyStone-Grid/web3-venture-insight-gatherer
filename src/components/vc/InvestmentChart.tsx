@@ -28,7 +28,7 @@ const COLORS = [
   "#0088FE",
 ];
 
-export function InvestmentChart({ data, uniqueProjects, selectedInvestments }: InvestmentChartProps) {
+export function InvestmentChart({ data, uniqueProjects, selectedInvestments, isLoading, }: InvestmentChartProps) {
   console.log("Chart Data:", data);
   console.log("Unique Projects:", uniqueProjects);
   console.log("Selected Investments:", selectedInvestments);
