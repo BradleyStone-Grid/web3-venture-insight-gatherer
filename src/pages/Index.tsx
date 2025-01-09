@@ -10,7 +10,6 @@ const vcData = [
     description: "Pioneering venture fund focused on technology companies across all stages.",
     aum: "35B",
     focus: ["Web3", "DeFi", "Infrastructure"],
-    investments: 124,
     website: "https://a16z.com",
     portfolioCompanies: [
       {
@@ -24,7 +23,7 @@ const vcData = [
         profileUrl: "https://opensea.io"
       }
     ],
-    investmentHistory: [
+    investments: [
       {
         date: "2022-03-15",
         amount: 2500000,
@@ -152,8 +151,7 @@ const Index = () => {
           {filteredVCs.map((vc) => (
             <VCProfile 
               key={vc.name} 
-              {...vc} 
-              investments={vc.investmentHistory}
+              {...vc}
             />
           ))}
         </div>

@@ -11,13 +11,20 @@ interface PortfolioCompany {
   profileUrl: string;
 }
 
+interface Investment {
+  date: string;
+  amount: number;
+  round: string;
+  project: string;
+}
+
 interface VCProfileProps {
   name: string;
   logo: string;
   description: string;
   aum: string;
   focus: string[];
-  investments: number;
+  investments?: Investment[];
   website: string;
   investmentStage?: string[];
   portfolioCompanies?: PortfolioCompany[];
@@ -29,25 +36,12 @@ export function VCProfile({
   description,
   aum,
   focus = [],
-  investments,
+  investments = [],
   website,
   investmentStage = [],
   portfolioCompanies = [],
 }: VCProfileProps) {
   const [showDetails, setShowDetails] = useState(false);
-
-  // Mock investment data with realistic dates, amounts, and projects
-  const mockInvestments = [
-    { date: "2022-03-15", amount: 2500000, round: "Seed", project: "Innovate Protocol", assetPrice: 3200 },
-    { date: "2022-07-20", amount: 8000000, round: "Series A", project: "BlockChain Solutions", assetPrice: 3600 },
-    { date: "2022-11-05", amount: 15000000, round: "Series B", project: "Crypto Finance Group", assetPrice: 4100 },
-    { date: "2023-02-12", amount: 5000000, round: "Series A", project: "Decentralized Apps Inc.", assetPrice: 4600 },
-    { date: "2023-04-28", amount: 12000000, round: "Series B", project: "NFT Marketplace Co.", assetPrice: 5200 },
-    { date: "2023-08-10", amount: 20000000, round: "Series C", project: "Web3 Security Solutions", assetPrice: 5600 },
-    { date: "2023-12-01", amount: 7000000, round: "Series A", project: "Metaverse Developments", assetPrice: 6200 },
-    { date: "2024-02-18", amount: 10000000, round: "Series B", project: "AI Crypto Analytics", assetPrice: 6800 },
-    { date: "2024-04-05", amount: 18000000, round: "Series C", project: "Blockchain Gaming Studios", assetPrice: 7200 }
-  ];
 
   return (
     <>
@@ -109,7 +103,7 @@ export function VCProfile({
               </div>
               <div className="flex items-center gap-2">
                 <Users className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm font-medium">{investments} Investments</span>
+                <span className="text-sm font-medium">{investments.length} Investments</span>
               </div>
             </div>
             <Button variant="outline" onClick={() => setShowDetails(true)}>
@@ -127,7 +121,7 @@ export function VCProfile({
         description={description}
         aum={aum}
         website={website}
-        investments={mockInvestments}
+        investments={investments}
       />
     </>
   );
