@@ -1,12 +1,15 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Card } from "@/components/ui/card";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
-import { formatCurrency } from "@/lib/utils";
-import { Badge } from "./ui/badge";
-import { ExternalLink, Globe, List } from "lucide-react";
-import { useMemo, useState } from 'react';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+} from "@/components/ui/dialog";
+import { List } from "lucide-react";
 import { Button } from "./ui/button";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "./ui/sheet";
+import { useMemo, useState } from "react";
+import { VCHeader } from "./vc/VCHeader";
+import { VCStats } from "./vc/VCStats";
+import { InvestmentChart } from "./vc/InvestmentChart";
+import { InvestmentSidebar } from "./vc/InvestmentSidebar";
 
 interface Investment {
   date: string;
@@ -23,19 +26,8 @@ interface VCDetailsViewProps {
   description: string;
   aum: string;
   website: string;
-  investments: Investment[];
+  investments?: Investment[];
 }
-
-const COLORS = [
-  "#8884d8",
-  "#82ca9d",
-  "#ffc658",
-  "#ff7300",
-  "#00C49F",
-  "#FFBB28",
-  "#FF8042",
-  "#0088FE",
-];
 
 export function VCDetailsView({
   open,
@@ -50,7 +42,7 @@ export function VCDetailsView({
   const [selectedInvestment, setSelectedInvestment] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  // Generate mock price data that aligns with investment dates
+  // Generate mock price data based on investment dates
   const mockPriceData = useMemo(() => {
     if (!investments.length) return [];
     
@@ -105,7 +97,7 @@ export function VCDetailsView({
   // Combine all data for the chart
   const combinedChartData = useMemo(() => {
     return mockPriceData.map(pricePoint => {
-      const dataPoint: any = { date: pricePoint.date, basePrice: pricePoint.price };
+      const dataPoint: any = { date: pricePoint.date };
       
       // Add data points for each project
       Object.entries(projectTimeSeries).forEach(([project, series]) => {
@@ -129,133 +121,37 @@ export function VCDetailsView({
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <img src={logo} alt={name} className="h-12 w-12 rounded-full" />
-              <div>
-                <DialogTitle>{name}</DialogTitle>
-                <a
-                  href={website}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-sm text-muted-foreground hover:text-primary inline-flex items-center gap-1"
-                >
-                  <Globe className="h-3 w-3" />
-                  <span>Website</span>
-                  <ExternalLink className="h-3 w-3" />
-                </a>
-              </div>
-            </div>
-            <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
-              <SheetTrigger asChild>
-                <Button variant="outline" size="icon">
-                  <List className="h-4 w-4" />
-                </Button>
-              </SheetTrigger>
-              <SheetContent>
-                <SheetHeader>
-                  <SheetTitle>Investment Details</SheetTitle>
-                </SheetHeader>
-                <div className="mt-4">
-                  {investments.map((investment) => (
-                    <div
-                      key={`${investment.date}-${investment.project}`}
-                      className={`p-3 rounded-lg mb-2 cursor-pointer transition-colors ${
-                        selectedInvestment === investment.project
-                          ? "bg-primary/10"
-                          : "hover:bg-muted"
-                      }`}
-                      onClick={() => setSelectedInvestment(investment.project)}
-                    >
-                      <h4 className="font-medium">{investment.project}</h4>
-                      <p className="text-sm text-muted-foreground">
-                        {investment.date}
-                      </p>
-                      <p className="text-sm">
-                        {formatCurrency(Number(investment.amount))}
-                      </p>
-                      <Badge variant="secondary" className="mt-1">
-                        {investment.round}
-                      </Badge>
-                    </div>
-                  ))}
-                </div>
-              </SheetContent>
-            </Sheet>
+            <VCHeader
+              name={name}
+              logo={logo}
+              website={website}
+              description={description}
+            />
+            <Button variant="outline" size="icon" onClick={() => setSidebarOpen(true)}>
+              <List className="h-4 w-4" />
+            </Button>
           </div>
         </DialogHeader>
 
         <div className="space-y-6">
-          <p className="text-muted-foreground">{description}</p>
+          <VCStats aum={aum} totalInvestments={investments.length} />
           
-          <div className="grid grid-cols-2 gap-4">
-            <Card className="p-4">
-              <h4 className="text-sm font-medium mb-1">Assets Under Management</h4>
-              <p className="text-2xl font-bold">{aum}</p>
-            </Card>
-            <Card className="p-4">
-              <h4 className="text-sm font-medium mb-1">Total Investments</h4>
-              <p className="text-2xl font-bold">{investments.length}</p>
-            </Card>
-          </div>
-
-          <Card className="p-4">
-            <h4 className="text-sm font-medium mb-4">Investment History</h4>
-            <div className="h-[400px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart
-                  data={combinedChartData}
-                  margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-                >
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis 
-                    dataKey="date" 
-                    tick={{ fontSize: 12 }}
-                    interval="preserveStartEnd"
-                  />
-                  <YAxis 
-                    yAxisId="left"
-                    orientation="left"
-                    tick={{ fontSize: 12 }}
-                    tickFormatter={(value) => `$${(Number(value) / 1000000).toFixed(1)}M`}
-                  />
-                  <Tooltip
-                    content={({ active, payload, label }) => {
-                      if (active && payload && payload.length) {
-                        return (
-                          <div className="bg-background border rounded-lg p-3 shadow-lg">
-                            <p className="font-medium">{label}</p>
-                            {payload.map((entry, index) => (
-                              entry.value && (
-                                <p key={index} className="text-sm text-muted-foreground">
-                                  {entry.name}: {formatCurrency(Number(entry.value))}
-                                </p>
-                              )
-                            ))}
-                          </div>
-                        );
-                      }
-                      return null;
-                    }}
-                  />
-                  <Legend />
-                  {uniqueProjects.map((project, index) => (
-                    <Line
-                      key={project}
-                      yAxisId="left"
-                      type="monotone"
-                      dataKey={project}
-                      name={project}
-                      stroke={COLORS[index % COLORS.length]}
-                      dot={{ r: 6 }}
-                      strokeWidth={selectedInvestment === project ? 3 : 1}
-                      opacity={selectedInvestment ? (selectedInvestment === project ? 1 : 0.3) : 1}
-                    />
-                  ))}
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-          </Card>
+          {combinedChartData.length > 0 && (
+            <InvestmentChart
+              data={combinedChartData}
+              uniqueProjects={uniqueProjects}
+              selectedInvestment={selectedInvestment}
+            />
+          )}
         </div>
+
+        <InvestmentSidebar
+          open={sidebarOpen}
+          onOpenChange={setSidebarOpen}
+          investments={investments}
+          selectedInvestment={selectedInvestment}
+          onInvestmentSelect={setSelectedInvestment}
+        />
       </DialogContent>
     </Dialog>
   );
