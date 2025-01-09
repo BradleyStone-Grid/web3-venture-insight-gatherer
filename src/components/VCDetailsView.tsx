@@ -4,14 +4,13 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsi
 import { formatCurrency } from "@/lib/utils";
 import { Badge } from "./ui/badge";
 import { ExternalLink, Globe } from "lucide-react";
-import { useMemo } from 'react';  // Added this import
+import { useMemo } from 'react';
 
 interface Investment {
   date: string;
   amount: number;
   round: string;
   project: string;
-  assetPrice?: number;
 }
 
 interface VCDetailsViewProps {
@@ -66,16 +65,14 @@ export function VCDetailsView({
   const combinedChartData = useMemo(() => {
     if (!investments.length || !mockPriceData.length) return [];
 
-    const priceMap = new Map(mockPriceData.map(item => [item.date, item.price]));
+    // Map investments by date for efficient lookup
     const investmentMap = new Map(investments.map(item => [item.date, item]));
 
-    // Use all unique dates from both datasets
-    const allDates = [...new Set([...priceMap.keys(), ...investmentMap.keys()])].sort();
-
-    return allDates.map(date => ({
-      date,
-      price: priceMap.get(date),
-      ...(investmentMap.get(date) || {}),
+    // Iterate through price data, merging investment data when available
+    return mockPriceData.map(priceItem => ({
+      date: priceItem.date,
+      price: priceItem.price,
+      ...(investmentMap.get(priceItem.date) || {}),
     }));
   }, [investments, mockPriceData]);
 
@@ -214,7 +211,13 @@ export function VCDetailsView({
                       <td className="py-2">{investment.project}</td>
                       <td className="py-2">{formatCurrency(investment.amount)}</td>
                       <td className="py-2">{investment.round}</td>
-                      <td className="py-2">{formatCurrency(investment.assetPrice || 0)}</td>
+                      <td className="py-2">
+                        {formatCurrency(
+                          mockPriceData.find(
+                            (p) => p.date === investment.date
+                          )?.price || 0
+                        )}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
