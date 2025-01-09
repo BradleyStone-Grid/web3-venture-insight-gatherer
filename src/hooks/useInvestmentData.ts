@@ -53,37 +53,40 @@ export const useInvestmentData = (investments: Investment[] = []) => {
 
       if (projectInvestments.length === 0) return;
 
-      const firstInvestmentDate = projectInvestments[0].date;
+      // Track accumulated value for this project
       let accumulatedValue = 0;
 
       // Process each date in the range
       dateRange.forEach((date) => {
-        // Only process dates after the first investment
-        if (date >= firstInvestmentDate) {
-          // Add any new investments on this date
-          const investmentsOnDate = projectInvestments.filter(
-            (inv) => inv.date === date
-          );
-          
-          // Accumulate new investments
-          accumulatedValue += investmentsOnDate.reduce(
-            (sum, inv) => sum + inv.amount,
-            0
-          );
+        // Find investments on this date for this project
+        const investmentsOnDate = projectInvestments.filter(
+          (inv) => inv.date === date
+        );
 
-          // Apply growth after initial investment
+        // Add new investments to accumulated value
+        const newInvestments = investmentsOnDate.reduce(
+          (sum, inv) => sum + inv.amount,
+          0
+        );
+        
+        if (newInvestments > 0) {
+          accumulatedValue = newInvestments;
+        }
+
+        // Only add data points after the first investment for this project
+        if (date >= projectInvestments[0].date) {
+          // Apply growth calculation
           if (accumulatedValue > 0) {
-            const monthsSinceLastInvestment = Math.floor(
-              (new Date(date).getTime() - new Date(firstInvestmentDate).getTime()) /
+            const monthsSinceFirstInvestment = Math.floor(
+              (new Date(date).getTime() - new Date(projectInvestments[0].date).getTime()) /
               (1000 * 60 * 60 * 24 * 30.44)
             );
             
-            // Apply consistent monthly growth
             const baseGrowthRate = 0.002; // 0.2% monthly growth
-            const volatilityFactor = Math.sin(monthsSinceLastInvestment * 0.3) * 0.001;
+            const volatilityFactor = Math.sin(monthsSinceFirstInvestment * 0.3) * 0.001;
             const monthlyRate = baseGrowthRate + volatilityFactor;
             
-            const growthMultiplier = Math.pow(1 + monthlyRate, monthsSinceLastInvestment);
+            const growthMultiplier = Math.pow(1 + monthlyRate, monthsSinceFirstInvestment);
             accumulatedValue *= growthMultiplier;
           }
 
