@@ -33,10 +33,11 @@ export const useInvestmentData = (investments: Investment[] = []) => {
 
   // Create project time series with accumulated investments and growth
   const projectTimeSeries = useMemo(() => {
-    const series: Record<string, { date: string; price: number }[]> = {};
+    const series: { [key: string]: { date: string; price: number }[] } = {};
     
-    // Process each project separately
+    // Initialize series for each project
     uniqueProjects.forEach(project => {
+      series[project] = [];
       const projectInvestments = investments
         .filter(inv => inv.project === project)
         .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
@@ -44,13 +45,10 @@ export const useInvestmentData = (investments: Investment[] = []) => {
       if (projectInvestments.length === 0) return;
 
       const firstInvestmentDate = projectInvestments[0].date;
-      series[project] = [];
       let accumulatedValue = 0;
 
-      // Process each date for this project
-      dateRange
-        .filter(date => date >= firstInvestmentDate)
-        .forEach(date => {
+      dateRange.forEach(date => {
+        if (date >= firstInvestmentDate) {
           // Find investments on this date
           const investmentsOnDate = projectInvestments.filter(inv => inv.date === date);
           
@@ -71,7 +69,8 @@ export const useInvestmentData = (investments: Investment[] = []) => {
             const randomGrowth = 0.05 + (Math.sin(growthSeed) + 1) * 0.025; // 5-10% growth
             accumulatedValue *= (1 + randomGrowth);
           }
-        });
+        }
+      });
     });
 
     console.log("Project Time Series:", series);
@@ -83,15 +82,18 @@ export const useInvestmentData = (investments: Investment[] = []) => {
     const activeProjects = showAll ? uniqueProjects : selectedInvestments;
     
     return dateRange.map(date => {
-      const dataPoint: Record<string, any> = { date };
+      const dataPoint: { [key: string]: any } = { date };
       
       activeProjects.forEach(project => {
         const projectData = projectTimeSeries[project];
         if (!projectData) return;
-        
+
         const matchingPoint = projectData.find(d => d.date === date);
         if (matchingPoint) {
           dataPoint[project] = matchingPoint.price;
+        } else {
+          // If no matching point is found, use 0 to ensure the line is drawn
+          dataPoint[project] = 0;
         }
       });
       

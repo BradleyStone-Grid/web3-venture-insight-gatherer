@@ -59,7 +59,7 @@ export function InvestmentChart({ data, uniqueProjects, selectedInvestments }: I
                     <div className="bg-background border rounded-lg p-3 shadow-lg">
                       <p className="font-medium">{label}</p>
                       {payload.map((entry, index) => (
-                        entry.value && (
+                        entry.value > 0 && (
                           <p key={index} className="text-sm text-muted-foreground">
                             {entry.name}: {formatCurrency(Number(entry.value))}
                           </p>
