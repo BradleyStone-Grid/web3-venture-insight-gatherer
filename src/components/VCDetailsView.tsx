@@ -3,8 +3,10 @@ import { Card } from "@/components/ui/card";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { formatCurrency } from "@/lib/utils";
 import { Badge } from "./ui/badge";
-import { ExternalLink, Globe } from "lucide-react";
-import { useMemo } from 'react';
+import { ExternalLink, Globe, List } from "lucide-react";
+import { useMemo, useState } from 'react';
+import { Button } from "./ui/button";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "./ui/sheet";
 
 interface Investment {
   date: string;
@@ -24,6 +26,17 @@ interface VCDetailsViewProps {
   investments: Investment[];
 }
 
+const COLORS = [
+  "#8884d8",
+  "#82ca9d",
+  "#ffc658",
+  "#ff7300",
+  "#00C49F",
+  "#FFBB28",
+  "#FF8042",
+  "#0088FE",
+];
+
 export function VCDetailsView({
   open,
   onOpenChange,
@@ -34,6 +47,9 @@ export function VCDetailsView({
   website,
   investments = [],
 }: VCDetailsViewProps) {
+  const [selectedInvestment, setSelectedInvestment] = useState<string | null>(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
   // Generate mock price data that aligns with investment dates
   const mockPriceData = useMemo(() => {
     if (!investments.length) return [];
@@ -46,7 +62,6 @@ export function VCDetailsView({
     let basePrice = 3000; // Starting price
     
     while (currentDate <= endDate) {
-      // Add some random variation to price
       basePrice = basePrice * (1 + (Math.random() - 0.5) * 0.1);
       
       priceData.push({
@@ -54,47 +69,118 @@ export function VCDetailsView({
         price: Math.round(basePrice),
       });
       
-      // Move to next month
       currentDate = new Date(currentDate.setMonth(currentDate.getMonth() + 1));
     }
     
     return priceData;
   }, [investments]);
 
-  // Combine investment and price data
-  const combinedChartData = useMemo(() => {
-    if (!investments.length || !mockPriceData.length) return [];
+  // Create individual time series for each project
+  const projectTimeSeries = useMemo(() => {
+    if (!investments.length) return {};
 
-    // Map investments by date for efficient lookup
-    const investmentMap = new Map(investments.map(item => [item.date, item]));
+    const series: { [key: string]: any[] } = {};
+    
+    // Initialize series for each project
+    investments.forEach(inv => {
+      if (!series[inv.project]) {
+        series[inv.project] = mockPriceData.map(pd => ({
+          date: pd.date,
+          price: null
+        }));
+      }
+    });
 
-    // Iterate through price data, merging investment data when available
-    return mockPriceData.map(priceItem => ({
-      date: priceItem.date,
-      price: priceItem.price,
-      ...(investmentMap.get(priceItem.date) || {}),
-    }));
+    // Add investment amounts to the correct dates
+    investments.forEach(inv => {
+      const seriesIndex = series[inv.project].findIndex(d => d.date === inv.date);
+      if (seriesIndex !== -1) {
+        series[inv.project][seriesIndex].price = inv.amount;
+      }
+    });
+
+    return series;
   }, [investments, mockPriceData]);
+
+  // Combine all data for the chart
+  const combinedChartData = useMemo(() => {
+    return mockPriceData.map(pricePoint => {
+      const dataPoint: any = { date: pricePoint.date, basePrice: pricePoint.price };
+      
+      // Add data points for each project
+      Object.entries(projectTimeSeries).forEach(([project, series]) => {
+        const matchingPoint = series.find(s => s.date === pricePoint.date);
+        if (matchingPoint?.price) {
+          dataPoint[project] = matchingPoint.price;
+        }
+      });
+      
+      return dataPoint;
+    });
+  }, [mockPriceData, projectTimeSeries]);
+
+  const uniqueProjects = useMemo(() => 
+    [...new Set(investments.map(inv => inv.project))],
+    [investments]
+  );
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <div className="flex items-center gap-4">
-            <img src={logo} alt={name} className="h-12 w-12 rounded-full" />
-            <div>
-              <DialogTitle>{name}</DialogTitle>
-              <a
-                href={website}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-sm text-muted-foreground hover:text-primary inline-flex items-center gap-1"
-              >
-                <Globe className="h-3 w-3" />
-                <span>Website</span>
-                <ExternalLink className="h-3 w-3" />
-              </a>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <img src={logo} alt={name} className="h-12 w-12 rounded-full" />
+              <div>
+                <DialogTitle>{name}</DialogTitle>
+                <a
+                  href={website}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-muted-foreground hover:text-primary inline-flex items-center gap-1"
+                >
+                  <Globe className="h-3 w-3" />
+                  <span>Website</span>
+                  <ExternalLink className="h-3 w-3" />
+                </a>
+              </div>
             </div>
+            <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
+              <SheetTrigger asChild>
+                <Button variant="outline" size="icon">
+                  <List className="h-4 w-4" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent>
+                <SheetHeader>
+                  <SheetTitle>Investment Details</SheetTitle>
+                </SheetHeader>
+                <div className="mt-4">
+                  {investments.map((investment) => (
+                    <div
+                      key={`${investment.date}-${investment.project}`}
+                      className={`p-3 rounded-lg mb-2 cursor-pointer transition-colors ${
+                        selectedInvestment === investment.project
+                          ? "bg-primary/10"
+                          : "hover:bg-muted"
+                      }`}
+                      onClick={() => setSelectedInvestment(investment.project)}
+                    >
+                      <h4 className="font-medium">{investment.project}</h4>
+                      <p className="text-sm text-muted-foreground">
+                        {investment.date}
+                      </p>
+                      <p className="text-sm">
+                        {formatCurrency(investment.amount)}
+                      </p>
+                      <Badge variant="secondary" className="mt-1">
+                        {investment.round}
+                      </Badge>
+                    </div>
+                  ))}
+                </div>
+              </SheetContent>
+            </Sheet>
           </div>
         </DialogHeader>
 
@@ -127,41 +213,24 @@ export function VCDetailsView({
                     interval="preserveStartEnd"
                   />
                   <YAxis 
-                    yAxisId="left" 
-                    orientation="left" 
-                    stroke="#8884d8"
+                    yAxisId="left"
+                    orientation="left"
                     tick={{ fontSize: 12 }}
                     tickFormatter={(value) => `$${(value / 1000000).toFixed(1)}M`}
                   />
-                  <YAxis 
-                    yAxisId="right" 
-                    orientation="right" 
-                    stroke="#82ca9d"
-                    tick={{ fontSize: 12 }}
-                    tickFormatter={(value) => `$${value}`}
-                  />
                   <Tooltip
-                    content={({ active, payload }) => {
+                    content={({ active, payload, label }) => {
                       if (active && payload && payload.length) {
-                        const data = payload[0].payload;
                         return (
                           <div className="bg-background border rounded-lg p-3 shadow-lg">
-                            <p className="font-medium">{data.project || 'Price Data'}</p>
-                            {data.amount && (
-                              <p className="text-sm text-muted-foreground">
-                                Amount: {formatCurrency(data.amount)}
-                              </p>
-                            )}
-                            {data.price && (
-                              <p className="text-sm text-muted-foreground">
-                                Asset Price: {formatCurrency(data.price)}
-                              </p>
-                            )}
-                            {data.round && (
-                              <Badge variant="secondary" className="mt-1">
-                                {data.round}
-                              </Badge>
-                            )}
+                            <p className="font-medium">{label}</p>
+                            {payload.map((entry, index) => (
+                              entry.value && (
+                                <p key={index} className="text-sm text-muted-foreground">
+                                  {entry.name}: {formatCurrency(entry.value)}
+                                </p>
+                              )
+                            ))}
                           </div>
                         );
                       }
@@ -169,59 +238,21 @@ export function VCDetailsView({
                     }}
                   />
                   <Legend />
-                  <Line
-                    yAxisId="left"
-                    type="monotone"
-                    dataKey="amount"
-                    name="Investment Amount"
-                    stroke="#8884d8"
-                    activeDot={{ r: 8 }}
-                    dot={{ r: 6 }}
-                  />
-                  <Line
-                    yAxisId="right"
-                    type="monotone"
-                    dataKey="price"
-                    name="Asset Price"
-                    stroke="#82ca9d"
-                    dot={false}
-                  />
+                  {uniqueProjects.map((project, index) => (
+                    <Line
+                      key={project}
+                      yAxisId="left"
+                      type="monotone"
+                      dataKey={project}
+                      name={project}
+                      stroke={COLORS[index % COLORS.length]}
+                      dot={{ r: 6 }}
+                      strokeWidth={selectedInvestment === project ? 3 : 1}
+                      opacity={selectedInvestment ? (selectedInvestment === project ? 1 : 0.3) : 1}
+                    />
+                  ))}
                 </LineChart>
               </ResponsiveContainer>
-            </div>
-          </Card>
-
-          <Card className="p-4">
-            <h4 className="text-sm font-medium mb-4">Investment Details</h4>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b">
-                    <th className="text-left py-2">Date</th>
-                    <th className="text-left py-2">Project</th>
-                    <th className="text-left py-2">Amount</th>
-                    <th className="text-left py-2">Round</th>
-                    <th className="text-left py-2">Asset Price</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {investments.map((investment) => (
-                    <tr key={`${investment.date}-${investment.project}`} className="border-b">
-                      <td className="py-2">{investment.date}</td>
-                      <td className="py-2">{investment.project}</td>
-                      <td className="py-2">{formatCurrency(investment.amount)}</td>
-                      <td className="py-2">{investment.round}</td>
-                      <td className="py-2">
-                        {formatCurrency(
-                          mockPriceData.find(
-                            (p) => p.date === investment.date
-                          )?.price || 0
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
             </div>
           </Card>
         </div>
