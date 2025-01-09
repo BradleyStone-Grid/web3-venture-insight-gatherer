@@ -69,31 +69,30 @@ export const useInvestmentData = (investments: Investment[] = []) => {
           0
         );
         
+        // Properly accumulate the investments instead of resetting
         if (newInvestments > 0) {
-          accumulatedValue = newInvestments;
+          accumulatedValue += newInvestments;
         }
 
         // Only add data points after the first investment for this project
         if (date >= projectInvestments[0].date) {
           // Apply growth calculation
-          if (accumulatedValue > 0) {
-            const monthsSinceFirstInvestment = Math.floor(
-              (new Date(date).getTime() - new Date(projectInvestments[0].date).getTime()) /
-              (1000 * 60 * 60 * 24 * 30.44)
-            );
-            
-            const baseGrowthRate = 0.002; // 0.2% monthly growth
-            const volatilityFactor = Math.sin(monthsSinceFirstInvestment * 0.3) * 0.001;
-            const monthlyRate = baseGrowthRate + volatilityFactor;
-            
-            const growthMultiplier = Math.pow(1 + monthlyRate, monthsSinceFirstInvestment);
-            accumulatedValue *= growthMultiplier;
-          }
+          const monthsSinceFirstInvestment = Math.floor(
+            (new Date(date).getTime() - new Date(projectInvestments[0].date).getTime()) /
+            (1000 * 60 * 60 * 24 * 30.44)
+          );
+          
+          const baseGrowthRate = 0.002; // 0.2% monthly growth
+          const volatilityFactor = Math.sin(monthsSinceFirstInvestment * 0.3) * 0.001;
+          const monthlyRate = baseGrowthRate + volatilityFactor;
+          
+          const growthMultiplier = Math.pow(1 + monthlyRate, monthsSinceFirstInvestment);
+          const valueWithGrowth = accumulatedValue * growthMultiplier;
 
           // Add the data point
           series[project].push({
             date,
-            price: Math.round(accumulatedValue)
+            price: Math.round(valueWithGrowth)
           });
         }
       });
