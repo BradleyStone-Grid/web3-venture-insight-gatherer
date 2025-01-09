@@ -171,7 +171,7 @@ export function VCDetailsView({
                         {investment.date}
                       </p>
                       <p className="text-sm">
-                        {formatCurrency(investment.amount)}
+                        {formatCurrency(Number(investment.amount))}
                       </p>
                       <Badge variant="secondary" className="mt-1">
                         {investment.round}
@@ -216,7 +216,7 @@ export function VCDetailsView({
                     yAxisId="left"
                     orientation="left"
                     tick={{ fontSize: 12 }}
-                    tickFormatter={(value) => `$${(value / 1000000).toFixed(1)}M`}
+                    tickFormatter={(value) => `$${(Number(value) / 1000000).toFixed(1)}M`}
                   />
                   <Tooltip
                     content={({ active, payload, label }) => {
@@ -227,7 +227,7 @@ export function VCDetailsView({
                             {payload.map((entry, index) => (
                               entry.value && (
                                 <p key={index} className="text-sm text-muted-foreground">
-                                  {entry.name}: {formatCurrency(entry.value)}
+                                  {entry.name}: {formatCurrency(Number(entry.value))}
                                 </p>
                               )
                             ))}
