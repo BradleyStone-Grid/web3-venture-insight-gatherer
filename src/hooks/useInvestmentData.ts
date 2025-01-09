@@ -54,9 +54,9 @@ export const useInvestmentData = (investments: Investment[] = []) => {
       const firstInvestmentDate = projectInvestments[0].date;
       let accumulatedValue = 0;
 
-      dateRange
-        .filter(date => date >= firstInvestmentDate)
-        .forEach((date) => {
+      dateRange.forEach((date) => {
+        // Only process dates after the first investment
+        if (date >= firstInvestmentDate) {
           // Add any new investments on this date
           const investmentsOnDate = projectInvestments.filter(
             (inv) => inv.date === date
@@ -69,7 +69,7 @@ export const useInvestmentData = (investments: Investment[] = []) => {
             );
           }
 
-          // Apply more realistic growth/decline after initial investment
+          // Apply growth/decline after initial investment
           if (accumulatedValue > 0) {
             const monthsSinceLastInvestment = Math.floor(
               (new Date(date).getTime() - new Date(firstInvestmentDate).getTime()) / 
@@ -89,7 +89,8 @@ export const useInvestmentData = (investments: Investment[] = []) => {
             date,
             price: Math.round(accumulatedValue)
           });
-        });
+        }
+      });
 
       console.log(`Project ${project} time series:`, series[project]);
     });
@@ -106,6 +107,7 @@ export const useInvestmentData = (investments: Investment[] = []) => {
     const activeProjects = showAll ? uniqueProjects : selectedInvestments;
     const chartData: any[] = [];
 
+    // Get all dates where any project has data
     const relevantDates = new Set<string>();
     activeProjects.forEach(project => {
       const projectData = projectTimeSeries[project];
@@ -114,20 +116,24 @@ export const useInvestmentData = (investments: Investment[] = []) => {
       }
     });
 
+    // Create data points for each date
     Array.from(relevantDates).sort().forEach(date => {
       const dataPoint: { [key: string]: any } = { date };
       
-      uniqueProjects.forEach(project => {
+      activeProjects.forEach(project => {
         const projectData = projectTimeSeries[project];
-        if (!projectData) return;
-
-        const matchingPoint = projectData.find(d => d.date === date);
-        if (matchingPoint) {
-          dataPoint[project] = matchingPoint.price;
+        if (projectData) {
+          const matchingPoint = projectData.find(d => d.date === date);
+          if (matchingPoint) {
+            dataPoint[project] = matchingPoint.price;
+          }
         }
       });
 
-      chartData.push(dataPoint);
+      // Only add data points that have at least one non-zero value
+      if (Object.values(dataPoint).some(value => value !== 0 && value !== undefined)) {
+        chartData.push(dataPoint);
+      }
     });
 
     console.log("Chart Data:", chartData);
