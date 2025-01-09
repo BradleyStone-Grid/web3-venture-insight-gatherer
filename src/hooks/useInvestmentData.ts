@@ -45,7 +45,9 @@ export const useInvestmentData = (investments: Investment[] = []) => {
       if (projectInvestments.length === 0) return;
 
       const firstInvestmentDate = projectInvestments[0].date;
+      const lastInvestmentDate = projectInvestments[projectInvestments.length - 1].date;
       let accumulatedValue = 0;
+      let lastKnownValue = 0;
 
       dateRange.forEach(date => {
         if (date >= firstInvestmentDate) {
@@ -55,6 +57,19 @@ export const useInvestmentData = (investments: Investment[] = []) => {
           // Add new investments to accumulated value
           if (investmentsOnDate.length > 0) {
             accumulatedValue += investmentsOnDate.reduce((sum, inv) => sum + inv.amount, 0);
+            lastKnownValue = accumulatedValue;
+          }
+
+          // Only apply growth after the last investment date
+          if (date > lastInvestmentDate) {
+            const monthsSinceLastInvestment = Math.floor(
+              (new Date(date).getTime() - new Date(lastInvestmentDate).getTime()) / 
+              (1000 * 60 * 60 * 24 * 30)
+            );
+            
+            // Apply a more conservative monthly growth rate (0.5-1%)
+            const monthlyGrowthRate = 0.005 + (Math.sin(new Date(date).getTime()) + 1) * 0.0025;
+            accumulatedValue = lastKnownValue * Math.pow(1 + monthlyGrowthRate, monthsSinceLastInvestment);
           }
 
           // Add data point
@@ -62,13 +77,12 @@ export const useInvestmentData = (investments: Investment[] = []) => {
             date,
             price: Math.round(accumulatedValue)
           });
-
-          // Apply growth for future dates (5-10% range)
-          if (date !== dateRange[dateRange.length - 1]) {
-            const growthSeed = new Date(date).getTime();
-            const randomGrowth = 0.05 + (Math.sin(growthSeed) + 1) * 0.025; // 5-10% growth
-            accumulatedValue *= (1 + randomGrowth);
-          }
+        } else {
+          // Add zero value before first investment
+          series[project].push({
+            date,
+            price: 0
+          });
         }
       });
     });
@@ -89,12 +103,7 @@ export const useInvestmentData = (investments: Investment[] = []) => {
         if (!projectData) return;
 
         const matchingPoint = projectData.find(d => d.date === date);
-        if (matchingPoint) {
-          dataPoint[project] = matchingPoint.price;
-        } else {
-          // If no matching point is found, use 0 to ensure the line is drawn
-          dataPoint[project] = 0;
-        }
+        dataPoint[project] = matchingPoint ? matchingPoint.price : 0;
       });
       
       return dataPoint;
