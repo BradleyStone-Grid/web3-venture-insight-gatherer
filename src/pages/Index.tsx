@@ -8,28 +8,64 @@ const vcData = [
     name: "Andreessen Horowitz",
     logo: "https://picsum.photos/200",
     description: "Pioneering venture fund focused on technology companies across all stages.",
-    aum: "$35B",
+    aum: "35B",
     focus: ["Web3", "DeFi", "Infrastructure"],
     investments: 124,
     website: "https://a16z.com",
+    portfolioCompanies: [
+      {
+        name: "Uniswap",
+        logo: "https://picsum.photos/203",
+        profileUrl: "https://uniswap.org"
+      },
+      {
+        name: "OpenSea",
+        logo: "https://picsum.photos/204",
+        profileUrl: "https://opensea.io"
+      }
+    ]
   },
   {
     name: "Paradigm",
     logo: "https://picsum.photos/201",
     description: "Investment firm focused on supporting crypto/Web3 entrepreneurs.",
-    aum: "$15B",
+    aum: "15B",
     focus: ["DeFi", "NFTs", "Gaming"],
     investments: 87,
     website: "https://paradigm.xyz",
+    portfolioCompanies: [
+      {
+        name: "Optimism",
+        logo: "https://picsum.photos/205",
+        profileUrl: "https://optimism.io"
+      },
+      {
+        name: "Magic Eden",
+        logo: "https://picsum.photos/206",
+        profileUrl: "https://magiceden.io"
+      }
+    ]
   },
   {
     name: "Polychain Capital",
     logo: "https://picsum.photos/202",
     description: "Leading cryptocurrency investment firm.",
-    aum: "$4B",
+    aum: "4B",
     focus: ["Crypto", "DeFi", "Layer 1"],
     investments: 56,
     website: "https://polychain.capital",
+    portfolioCompanies: [
+      {
+        name: "Compound",
+        logo: "https://picsum.photos/207",
+        profileUrl: "https://compound.finance"
+      },
+      {
+        name: "dYdX",
+        logo: "https://picsum.photos/208",
+        profileUrl: "https://dydx.exchange"
+      }
+    ]
   },
 ];
 

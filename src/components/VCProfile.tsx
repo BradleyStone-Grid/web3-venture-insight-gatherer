@@ -1,6 +1,13 @@
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ExternalLink, TrendingUp, Users, Globe, Calendar, DollarSign } from "lucide-react";
+import { ExternalLink, TrendingUp, Users, Globe, Calendar } from "lucide-react";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
+
+interface PortfolioCompany {
+  name: string;
+  logo: string;
+  profileUrl: string;
+}
 
 interface VCProfileProps {
   name: string;
@@ -14,6 +21,7 @@ interface VCProfileProps {
   foundedDate?: string;
   headquarters?: string;
   investmentStage?: string[];
+  portfolioCompanies?: PortfolioCompany[];
 }
 
 export function VCProfile({
@@ -28,9 +36,10 @@ export function VCProfile({
   foundedDate,
   headquarters,
   investmentStage = [],
+  portfolioCompanies = [],
 }: VCProfileProps) {
   return (
-    <Card className="overflow-hidden transition-all duration-300 hover:shadow-xl bg-background/60 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <Card className="overflow-hidden transition-all duration-300 hover:shadow-xl bg-background/60 backdrop-blur supports-[backdrop-filter]:bg-background/60 dark:bg-background/80">
       <CardHeader className="space-y-4">
         <div className="flex items-center space-x-4">
           <img
@@ -63,17 +72,39 @@ export function VCProfile({
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-1">
             <p className="text-sm text-muted-foreground">Assets Under Management</p>
-            <div className="flex items-center space-x-2">
-              <DollarSign className="h-4 w-4 text-muted-foreground" />
-              <p className="text-lg font-semibold tracking-tight">{aum}</p>
-            </div>
+            <p className="text-lg font-semibold tracking-tight">{aum}</p>
           </div>
           <div className="space-y-1">
             <p className="text-sm text-muted-foreground">Portfolio Companies</p>
-            <div className="flex items-center space-x-2">
-              <Users className="h-4 w-4 text-muted-foreground" />
-              <p className="text-lg font-semibold tracking-tight">{investments}</p>
-            </div>
+            <HoverCard>
+              <HoverCardTrigger className="flex items-center space-x-2 cursor-pointer">
+                <Users className="h-4 w-4 text-muted-foreground" />
+                <p className="text-lg font-semibold tracking-tight">{investments}</p>
+              </HoverCardTrigger>
+              <HoverCardContent className="w-80">
+                <div className="space-y-4">
+                  <h4 className="text-sm font-semibold">Portfolio Companies</h4>
+                  <div className="grid grid-cols-2 gap-4">
+                    {portfolioCompanies.map((company) => (
+                      <a
+                        key={company.name}
+                        href={company.profileUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center space-x-2 hover:bg-accent rounded-md p-2 transition-colors"
+                      >
+                        <img
+                          src={company.logo}
+                          alt={company.name}
+                          className="h-6 w-6 rounded-full"
+                        />
+                        <span className="text-sm truncate">{company.name}</span>
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              </HoverCardContent>
+            </HoverCard>
           </div>
           {foundedDate && (
             <div className="space-y-1">
