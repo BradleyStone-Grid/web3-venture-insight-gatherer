@@ -35,6 +35,18 @@ const vcData = [
         amount: 3000000,
         round: "Seed",
         project: "BlockChain Solutions"
+      },
+      {
+        date: "2022-09-15",
+        amount: 4000000,
+        round: "Series B",
+        project: "Crypto Finance Group"
+      },
+      {
+        date: "2023-01-15",
+        amount: 5000000,
+        round: "Series C",
+        project: "NFT Marketplace Co."
       }
     ]
   },
@@ -65,10 +77,16 @@ const vcData = [
         project: "DeFi Protocol"
       },
       {
-        date: "2023-06-01",
+        date: "2023-03-15",
         amount: 5000000,
         round: "Series B",
         project: "NFT Platform"
+      },
+      {
+        date: "2023-06-01",
+        amount: 6000000,
+        round: "Series A",
+        project: "GameFi Platform"
       }
     ]
   },
@@ -99,10 +117,16 @@ const vcData = [
         project: "Layer1 Protocol"
       },
       {
-        date: "2023-09-01",
+        date: "2023-06-01",
         amount: 6000000,
         round: "Series A",
         project: "DeFi Exchange"
+      },
+      {
+        date: "2023-09-01",
+        amount: 7000000,
+        round: "Series B",
+        project: "Yield Protocol"
       }
     ]
   }

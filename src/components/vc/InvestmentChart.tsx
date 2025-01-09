@@ -14,7 +14,7 @@ import { formatCurrency } from "@/lib/utils";
 interface InvestmentChartProps {
   data: any[];
   uniqueProjects: string[];
-  selectedInvestment: string | null;
+  selectedInvestments: string[];
 }
 
 const COLORS = [
@@ -28,9 +28,10 @@ const COLORS = [
   "#0088FE",
 ];
 
-export function InvestmentChart({ data, uniqueProjects, selectedInvestment }: InvestmentChartProps) {
+export function InvestmentChart({ data, uniqueProjects, selectedInvestments }: InvestmentChartProps) {
   console.log("Chart Data:", data);
   console.log("Unique Projects:", uniqueProjects);
+  console.log("Selected Investments:", selectedInvestments);
   
   return (
     <Card className="p-4">
@@ -72,17 +73,18 @@ export function InvestmentChart({ data, uniqueProjects, selectedInvestment }: In
             />
             <Legend />
             {uniqueProjects.map((project, index) => (
-              <Line
-                key={project}
-                type="monotone"
-                dataKey={project}
-                name={project}
-                stroke={COLORS[index % COLORS.length]}
-                dot={{ r: 6 }}
-                strokeWidth={selectedInvestment === project ? 3 : 1}
-                opacity={selectedInvestment ? (selectedInvestment === project ? 1 : 0.3) : 1}
-                connectNulls
-              />
+              selectedInvestments.includes(project) && (
+                <Line
+                  key={project}
+                  type="monotone"
+                  dataKey={project}
+                  name={project}
+                  stroke={COLORS[index % COLORS.length]}
+                  dot={{ r: 4 }}
+                  strokeWidth={2}
+                  connectNulls
+                />
+              )
             ))}
           </LineChart>
         </ResponsiveContainer>

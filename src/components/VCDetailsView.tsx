@@ -10,6 +10,9 @@ import { VCHeader } from "./vc/VCHeader";
 import { VCStats } from "./vc/VCStats";
 import { InvestmentChart } from "./vc/InvestmentChart";
 import { InvestmentSidebar } from "./vc/InvestmentSidebar";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
+import { Switch } from "./ui/switch";
+import { Label } from "./ui/label";
 
 interface Investment {
   date: string;
@@ -39,7 +42,8 @@ export function VCDetailsView({
   website,
   investments = [],
 }: VCDetailsViewProps) {
-  const [selectedInvestment, setSelectedInvestment] = useState<string | null>(null);
+  const [selectedInvestments, setSelectedInvestments] = useState<string[]>([]);
+  const [showAll, setShowAll] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // Generate date range for the chart
@@ -47,7 +51,7 @@ export function VCDetailsView({
     if (!investments || investments.length === 0) return [];
     
     const startDate = new Date(investments[0].date);
-    const endDate = new Date(investments[investments.length - 1].date);
+    const endDate = new Date();
     const priceData = [];
     
     let currentDate = startDate;
@@ -69,17 +73,17 @@ export function VCDetailsView({
 
     const series: { [key: string]: any[] } = {};
     
-    // Initialize series for each project with null values
+    // Initialize series for each project
     investments.forEach(inv => {
       if (!series[inv.project]) {
         series[inv.project] = mockPriceData.map(pd => ({
           date: pd.date,
-          price: null
+          price: 0
         }));
       }
     });
 
-    // Add investment amounts and generate subsequent values for each project independently
+    // Add investment amounts and generate subsequent values
     investments.forEach(inv => {
       const projectSeries = series[inv.project];
       const startIndex = projectSeries.findIndex(d => d.date === inv.date);
@@ -90,7 +94,7 @@ export function VCDetailsView({
         // Fill in values from investment date onwards with growth
         for (let i = startIndex; i < projectSeries.length; i++) {
           projectSeries[i].price = Math.round(currentValue);
-          // Add random growth between -5% to +15% (biased towards growth)
+          // Add random growth between -5% to +15%
           currentValue = currentValue * (1 + (Math.random() * 0.20 - 0.05));
         }
       }
@@ -99,20 +103,23 @@ export function VCDetailsView({
     return series;
   }, [investments, mockPriceData]);
 
-  // Combine all project data for the chart
+  // Filter and combine project data for the chart
   const combinedChartData = useMemo(() => {
+    const activeProjects = showAll ? uniqueProjects : selectedInvestments;
+    
     return mockPriceData.map(pricePoint => {
       const dataPoint: any = { date: pricePoint.date };
       
-      // Add data points for each project
       Object.entries(projectTimeSeries).forEach(([project, series]) => {
-        const matchingPoint = series.find(s => s.date === pricePoint.date);
-        dataPoint[project] = matchingPoint?.price || null;
+        if (activeProjects.includes(project)) {
+          const matchingPoint = series.find(s => s.date === pricePoint.date);
+          dataPoint[project] = matchingPoint?.price || 0;
+        }
       });
       
       return dataPoint;
     });
-  }, [mockPriceData, projectTimeSeries]);
+  }, [mockPriceData, projectTimeSeries, showAll, selectedInvestments]);
 
   const uniqueProjects = useMemo(() => 
     [...new Set(investments.map(inv => inv.project))],
@@ -139,11 +146,40 @@ export function VCDetailsView({
         <div className="space-y-6">
           <VCStats aum={aum} totalInvestments={investments.length} />
           
+          <div className="flex items-center justify-between gap-4 mb-4">
+            <div className="flex items-center space-x-2">
+              <Switch
+                checked={showAll}
+                onCheckedChange={setShowAll}
+                id="show-all"
+              />
+              <Label htmlFor="show-all">Show All Investments</Label>
+            </div>
+            
+            {!showAll && (
+              <Select
+                value={selectedInvestments[0]}
+                onValueChange={(value) => setSelectedInvestments([value])}
+              >
+                <SelectTrigger className="w-[200px]">
+                  <SelectValue placeholder="Select investment" />
+                </SelectTrigger>
+                <SelectContent>
+                  {uniqueProjects.map((project) => (
+                    <SelectItem key={project} value={project}>
+                      {project}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+          </div>
+          
           {combinedChartData.length > 0 && (
             <InvestmentChart
               data={combinedChartData}
               uniqueProjects={uniqueProjects}
-              selectedInvestment={selectedInvestment}
+              selectedInvestments={showAll ? uniqueProjects : selectedInvestments}
             />
           )}
         </div>
@@ -152,8 +188,8 @@ export function VCDetailsView({
           open={sidebarOpen}
           onOpenChange={setSidebarOpen}
           investments={investments}
-          selectedInvestment={selectedInvestment}
-          onInvestmentSelect={setSelectedInvestment}
+          selectedInvestment={selectedInvestments[0]}
+          onInvestmentSelect={(investment) => setSelectedInvestments([investment])}
         />
       </DialogContent>
     </Dialog>
