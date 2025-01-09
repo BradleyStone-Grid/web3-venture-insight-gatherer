@@ -18,7 +18,9 @@ export const fetchCryptoRankData = async (endpoint: string, params: Record<strin
     throw new Error('No API key found');
   }
 
+  // Add the API key to the query parameters
   const queryParams = new URLSearchParams({
+    api_key: apiKey,
     ...params,
   });
 
@@ -29,7 +31,6 @@ export const fetchCryptoRankData = async (endpoint: string, params: Record<strin
     const response = await fetch(url, {
       headers: {
         'Accept': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
       },
     });
 
