@@ -18,11 +18,7 @@ export const fetchCryptoRankData = async (endpoint: string, params: Record<strin
     throw new Error('No API key found');
   }
 
-  // Add the API key to the query parameters with the correct parameter name 'key'
-  const queryParams = new URLSearchParams({
-    key: apiKey,
-    ...params,
-  });
+  const queryParams = new URLSearchParams(params);
 
   const url = `https://api.cryptorank.io/v2${endpoint}?${queryParams}`;
   console.log('Fetching CryptoRank data:', url);
@@ -31,6 +27,7 @@ export const fetchCryptoRankData = async (endpoint: string, params: Record<strin
     const response = await fetch(url, {
       headers: {
         'Accept': 'application/json',
+        'x-api-key': apiKey
       },
     });
 
