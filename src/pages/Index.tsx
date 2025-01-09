@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { VCProfile } from "@/components/VCProfile";
 import { SearchBar } from "@/components/SearchBar";
+import { CryptoRankKeyInput } from "@/components/CryptoRankKeyInput";
 
 // Mock data - replace with real API data later
 const vcData = [
@@ -111,6 +112,7 @@ const Index = () => {
           </p>
         </div>
         
+        <CryptoRankKeyInput />
         <SearchBar onSearch={setSearchQuery} />
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
