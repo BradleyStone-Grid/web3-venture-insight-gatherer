@@ -60,10 +60,10 @@ export function InvestmentChart({
             <YAxis 
               tick={{ fontSize: 12 }}
               tickFormatter={(value) => {
-                if (value >= 1000000) {
+                if (typeof value === 'number' && value >= 1000000) {
                   return `$${(value / 1000000).toFixed(1)}M`;
                 }
-                return `$${(value / 1000).toFixed(1)}K`;
+                return typeof value === 'number' ? `$${(value / 1000).toFixed(1)}K` : '0';
               }}
               width={80}
             />
@@ -79,8 +79,12 @@ export function InvestmentChart({
                         })}
                       </p>
                       {payload
-                        .filter(entry => entry.value > 0)
-                        .sort((a, b) => (b.value as number) - (a.value as number))
+                        .filter(entry => typeof entry.value === 'number' && entry.value > 0)
+                        .sort((a, b) => {
+                          const aValue = typeof a.value === 'number' ? a.value : 0;
+                          const bValue = typeof b.value === 'number' ? b.value : 0;
+                          return bValue - aValue;
+                        })
                         .map((entry, index) => (
                           <p 
                             key={`${entry.name}-${index}`} 
