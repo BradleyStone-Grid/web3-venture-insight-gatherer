@@ -76,10 +76,9 @@ export const useInvestmentData = (investments: Investment[] = []) => {
               (1000 * 60 * 60 * 24 * 30.44)
             );
             
-            // Apply monthly growth/decline with project-specific variability
-            const baseGrowthRate = 0.005; // 0.5% base monthly growth
-            const projectRiskFactor = (uniqueProjects.indexOf(project) + 1) * 0.001;
-            const volatilityFactor = Math.sin(monthsSinceLastInvestment * 0.5) * projectRiskFactor;
+            // Apply consistent monthly growth/decline for all projects
+            const baseGrowthRate = 0.002; // 0.2% base monthly growth
+            const volatilityFactor = Math.sin(monthsSinceLastInvestment * 0.3) * 0.001;
             const monthlyRate = baseGrowthRate + volatilityFactor;
             
             const growthMultiplier = Math.pow(1 + monthlyRate, monthsSinceLastInvestment);
