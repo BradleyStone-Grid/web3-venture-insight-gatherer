@@ -42,7 +42,7 @@ export function VCDetailsView({
   const [selectedInvestment, setSelectedInvestment] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  // Generate mock price data based on investment dates
+  // Generate date range for the chart
   const mockPriceData = useMemo(() => {
     if (!investments.length) return [];
     
@@ -51,14 +51,10 @@ export function VCDetailsView({
     const priceData = [];
     
     let currentDate = startDate;
-    let basePrice = 3000000; // Starting price in millions
     
     while (currentDate <= endDate) {
-      basePrice = basePrice * (1 + (Math.random() - 0.5) * 0.1); // 10% random fluctuation
-      
       priceData.push({
         date: currentDate.toISOString().split('T')[0],
-        price: Math.round(basePrice),
       });
       
       currentDate = new Date(currentDate.setMonth(currentDate.getMonth() + 1));
@@ -73,7 +69,7 @@ export function VCDetailsView({
 
     const series: { [key: string]: any[] } = {};
     
-    // Initialize series for each project
+    // Initialize series for each project with null values
     investments.forEach(inv => {
       if (!series[inv.project]) {
         series[inv.project] = mockPriceData.map(pd => ({
@@ -83,7 +79,7 @@ export function VCDetailsView({
       }
     });
 
-    // Add investment amounts and generate subsequent values
+    // Add investment amounts and generate subsequent values for each project independently
     investments.forEach(inv => {
       const projectSeries = series[inv.project];
       const startIndex = projectSeries.findIndex(d => d.date === inv.date);
@@ -91,10 +87,11 @@ export function VCDetailsView({
       if (startIndex !== -1) {
         let currentValue = inv.amount;
         
-        // Fill in values from investment date onwards
+        // Fill in values from investment date onwards with growth
         for (let i = startIndex; i < projectSeries.length; i++) {
-          currentValue = currentValue * (1 + (Math.random() - 0.45) * 0.1); // Slight upward bias
           projectSeries[i].price = Math.round(currentValue);
+          // Add random growth between -5% to +15% (biased towards growth)
+          currentValue = currentValue * (1 + (Math.random() * 0.20 - 0.05));
         }
       }
     });
@@ -102,7 +99,7 @@ export function VCDetailsView({
     return series;
   }, [investments, mockPriceData]);
 
-  // Combine all data for the chart
+  // Combine all project data for the chart
   const combinedChartData = useMemo(() => {
     return mockPriceData.map(pricePoint => {
       const dataPoint: any = { date: pricePoint.date };
@@ -110,9 +107,7 @@ export function VCDetailsView({
       // Add data points for each project
       Object.entries(projectTimeSeries).forEach(([project, series]) => {
         const matchingPoint = series.find(s => s.date === pricePoint.date);
-        if (matchingPoint) {
-          dataPoint[project] = matchingPoint.price;
-        }
+        dataPoint[project] = matchingPoint?.price || null;
       });
       
       return dataPoint;
