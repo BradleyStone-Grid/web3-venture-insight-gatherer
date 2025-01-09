@@ -46,17 +46,18 @@ export function VCDetailsView({
   const [showAll, setShowAll] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  // Move uniqueProjects calculation before it's used
+  // Calculate unique projects
   const uniqueProjects = useMemo(() => 
     [...new Set(investments.map(inv => inv.project))],
     [investments]
   );
 
-  // Generate date range for the chart
+  // Generate complete date range for the chart
   const mockPriceData = useMemo(() => {
     if (!investments || investments.length === 0) return [];
     
-    const startDate = new Date(investments[0].date);
+    // Find the earliest investment date
+    const startDate = new Date(Math.min(...investments.map(inv => new Date(inv.date).getTime())));
     const endDate = new Date();
     const priceData = [];
     
@@ -79,17 +80,15 @@ export function VCDetailsView({
 
     const series: { [key: string]: any[] } = {};
     
-    // Initialize series for each project
-    investments.forEach(inv => {
-      if (!series[inv.project]) {
-        series[inv.project] = mockPriceData.map(pd => ({
-          date: pd.date,
-          price: 0
-        }));
-      }
+    // Initialize series for each project with zero values
+    uniqueProjects.forEach(project => {
+      series[project] = mockPriceData.map(pd => ({
+        date: pd.date,
+        price: 0
+      }));
     });
 
-    // Add investment amounts and generate subsequent values
+    // Process each investment and generate subsequent values
     investments.forEach(inv => {
       const projectSeries = series[inv.project];
       const startIndex = projectSeries.findIndex(d => d.date === inv.date);
@@ -97,7 +96,7 @@ export function VCDetailsView({
       if (startIndex !== -1) {
         let currentValue = inv.amount;
         
-        // Fill in values from investment date onwards with growth
+        // Fill in values from investment date onwards
         for (let i = startIndex; i < projectSeries.length; i++) {
           projectSeries[i].price = Math.round(currentValue);
           // Add random growth between -5% to +15%
@@ -107,17 +106,18 @@ export function VCDetailsView({
     });
 
     return series;
-  }, [investments, mockPriceData]);
+  }, [investments, mockPriceData, uniqueProjects]);
 
-  // Filter and combine project data for the chart
+  // Combine project data for the chart
   const combinedChartData = useMemo(() => {
     const activeProjects = showAll ? uniqueProjects : selectedInvestments;
     
     return mockPriceData.map(pricePoint => {
       const dataPoint: any = { date: pricePoint.date };
       
-      Object.entries(projectTimeSeries).forEach(([project, series]) => {
-        if (activeProjects.includes(project)) {
+      activeProjects.forEach(project => {
+        const series = projectTimeSeries[project];
+        if (series) {
           const matchingPoint = series.find(s => s.date === pricePoint.date);
           dataPoint[project] = matchingPoint?.price || 0;
         }
@@ -126,6 +126,10 @@ export function VCDetailsView({
       return dataPoint;
     });
   }, [mockPriceData, projectTimeSeries, showAll, selectedInvestments, uniqueProjects]);
+
+  console.log("Chart Data:", combinedChartData);
+  console.log("Unique Projects:", uniqueProjects);
+  console.log("Selected Investments:", selectedInvestments);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
