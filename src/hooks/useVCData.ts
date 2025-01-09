@@ -26,7 +26,7 @@ export function useVCData() {
         console.log("Fetching VC data from CryptoRank...");
         const response = await fetchCryptoRankData("/funds", {
           limit: 10,
-          sortBy: "aum",
+          sortBy: "investments",  // Changed from "aum" to "investments" as it's a valid enum value
           sortDirection: "desc",
         });
 
