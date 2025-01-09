@@ -11,18 +11,6 @@ const vcData = [
     aum: "35B",
     focus: ["Web3", "DeFi", "Infrastructure"],
     website: "https://a16z.com",
-    portfolioCompanies: [
-      {
-        name: "Uniswap",
-        logo: "https://picsum.photos/203",
-        profileUrl: "https://uniswap.org"
-      },
-      {
-        name: "OpenSea",
-        logo: "https://picsum.photos/204",
-        profileUrl: "https://opensea.io"
-      }
-    ],
     investments: [
       {
         date: "2023-03-15",
@@ -51,18 +39,6 @@ const vcData = [
     aum: "15B",
     focus: ["DeFi", "NFTs", "Gaming"],
     website: "https://paradigm.xyz",
-    portfolioCompanies: [
-      {
-        name: "Optimism",
-        logo: "https://picsum.photos/205",
-        profileUrl: "https://optimism.io"
-      },
-      {
-        name: "Magic Eden",
-        logo: "https://picsum.photos/206",
-        profileUrl: "https://magiceden.io"
-      }
-    ],
     investments: [
       {
         date: "2023-01-15",
@@ -91,18 +67,6 @@ const vcData = [
     aum: "4B",
     focus: ["Crypto", "DeFi", "Layer 1"],
     website: "https://polychain.capital",
-    portfolioCompanies: [
-      {
-        name: "Compound",
-        logo: "https://picsum.photos/207",
-        profileUrl: "https://compound.finance"
-      },
-      {
-        name: "dYdX",
-        logo: "https://picsum.photos/208",
-        profileUrl: "https://dydx.exchange"
-      }
-    ],
     investments: [
       {
         date: "2023-03-15",
