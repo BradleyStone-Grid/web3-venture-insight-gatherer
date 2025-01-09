@@ -23,6 +23,62 @@ const vcData = [
         logo: "https://picsum.photos/204",
         profileUrl: "https://opensea.io"
       }
+    ],
+    investmentHistory: [
+      {
+        date: "2022-03-15",
+        amount: 2500000,
+        round: "Series A",
+        project: "Innovate Protocol"
+      },
+      {
+        date: "2022-06-01",
+        amount: 3000000,
+        round: "Seed",
+        project: "BlockChain Solutions"
+      },
+      {
+        date: "2022-09-15",
+        amount: 4000000,
+        round: "Series B",
+        project: "Crypto Finance Group"
+      },
+      {
+        date: "2022-12-01",
+        amount: 2800000,
+        round: "Series A",
+        project: "Decentralized Apps Inc."
+      },
+      {
+        date: "2023-03-15",
+        amount: 5000000,
+        round: "Series C",
+        project: "NFT Marketplace Co."
+      },
+      {
+        date: "2023-06-01",
+        amount: 3500000,
+        round: "Seed",
+        project: "Web3 Security Solutions"
+      },
+      {
+        date: "2023-09-15",
+        amount: 4500000,
+        round: "Series A",
+        project: "Metaverse Developments"
+      },
+      {
+        date: "2023-12-01",
+        amount: 6000000,
+        round: "Series B",
+        project: "AI Crypto Analytics"
+      },
+      {
+        date: "2024-02-15",
+        amount: 7500000,
+        round: "Series C",
+        project: "Blockchain Gaming Studios"
+      }
     ]
   },
   {
@@ -94,7 +150,11 @@ const Index = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredVCs.map((vc) => (
-            <VCProfile key={vc.name} {...vc} />
+            <VCProfile 
+              key={vc.name} 
+              {...vc} 
+              investments={vc.investmentHistory}
+            />
           ))}
         </div>
 
