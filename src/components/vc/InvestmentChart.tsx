@@ -11,6 +11,12 @@ import {
 } from "recharts";
 import { formatCurrency } from "@/lib/utils";
 
+interface InvestmentChartProps {
+  data: any[];
+  uniqueProjects: string[];
+  selectedInvestment: string | null;
+}
+
 const COLORS = [
   "#8884d8",
   "#82ca9d",
@@ -22,13 +28,10 @@ const COLORS = [
   "#0088FE",
 ];
 
-interface InvestmentChartProps {
-  data: any[];
-  uniqueProjects: string[];
-  selectedInvestment: string | null;
-}
-
 export function InvestmentChart({ data, uniqueProjects, selectedInvestment }: InvestmentChartProps) {
+  console.log("Chart Data:", data);
+  console.log("Unique Projects:", uniqueProjects);
+  
   return (
     <Card className="p-4">
       <h4 className="text-sm font-medium mb-4">Investment History</h4>
@@ -45,8 +48,6 @@ export function InvestmentChart({ data, uniqueProjects, selectedInvestment }: In
               interval="preserveStartEnd"
             />
             <YAxis 
-              yAxisId="left"
-              orientation="left"
               tick={{ fontSize: 12 }}
               tickFormatter={(value) => `$${(Number(value) / 1000000).toFixed(1)}M`}
             />
@@ -73,7 +74,6 @@ export function InvestmentChart({ data, uniqueProjects, selectedInvestment }: In
             {uniqueProjects.map((project, index) => (
               <Line
                 key={project}
-                yAxisId="left"
                 type="monotone"
                 dataKey={project}
                 name={project}
@@ -81,6 +81,7 @@ export function InvestmentChart({ data, uniqueProjects, selectedInvestment }: In
                 dot={{ r: 6 }}
                 strokeWidth={selectedInvestment === project ? 3 : 1}
                 opacity={selectedInvestment ? (selectedInvestment === project ? 1 : 0.3) : 1}
+                connectNulls
               />
             ))}
           </LineChart>

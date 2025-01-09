@@ -51,10 +51,10 @@ export function VCDetailsView({
     const priceData = [];
     
     let currentDate = startDate;
-    let basePrice = 3000; // Starting price
+    let basePrice = 3000000; // Starting price in millions
     
     while (currentDate <= endDate) {
-      basePrice = basePrice * (1 + (Math.random() - 0.5) * 0.1);
+      basePrice = basePrice * (1 + (Math.random() - 0.5) * 0.1); // 10% random fluctuation
       
       priceData.push({
         date: currentDate.toISOString().split('T')[0],
@@ -83,11 +83,19 @@ export function VCDetailsView({
       }
     });
 
-    // Add investment amounts to the correct dates
+    // Add investment amounts and generate subsequent values
     investments.forEach(inv => {
-      const seriesIndex = series[inv.project].findIndex(d => d.date === inv.date);
-      if (seriesIndex !== -1) {
-        series[inv.project][seriesIndex].price = inv.amount;
+      const projectSeries = series[inv.project];
+      const startIndex = projectSeries.findIndex(d => d.date === inv.date);
+      
+      if (startIndex !== -1) {
+        let currentValue = inv.amount;
+        
+        // Fill in values from investment date onwards
+        for (let i = startIndex; i < projectSeries.length; i++) {
+          currentValue = currentValue * (1 + (Math.random() - 0.45) * 0.1); // Slight upward bias
+          projectSeries[i].price = Math.round(currentValue);
+        }
       }
     });
 
@@ -102,7 +110,7 @@ export function VCDetailsView({
       // Add data points for each project
       Object.entries(projectTimeSeries).forEach(([project, series]) => {
         const matchingPoint = series.find(s => s.date === pricePoint.date);
-        if (matchingPoint?.price) {
+        if (matchingPoint) {
           dataPoint[project] = matchingPoint.price;
         }
       });
