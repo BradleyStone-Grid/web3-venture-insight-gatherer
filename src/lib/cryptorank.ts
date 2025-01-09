@@ -23,10 +23,10 @@ export const fetchCryptoRankData = async (endpoint: string, params: Record<strin
     api_key: apiKey,
   });
 
-  console.log('Fetching CryptoRank data:', `https://api.cryptorank.io/v1${endpoint}?${queryParams}`);
+  console.log('Fetching CryptoRank data:', `https://api.cryptorank.io/v0${endpoint}?${queryParams}`);
   
   const response = await fetch(
-    `https://api.cryptorank.io/v1${endpoint}?${queryParams}`,
+    `https://api.cryptorank.io/v0${endpoint}?${queryParams}`,
     {
       headers: {
         'Accept': 'application/json',
