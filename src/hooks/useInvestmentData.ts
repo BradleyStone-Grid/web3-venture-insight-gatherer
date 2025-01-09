@@ -42,7 +42,6 @@ export const useInvestmentData = (investments: Investment[] = []) => {
     console.log("Processing investment data...");
     const series: { [key: string]: { date: string; price: number }[] } = {};
 
-    // Initialize series for all projects
     uniqueProjects.forEach((project) => {
       series[project] = [];
       
@@ -52,24 +51,24 @@ export const useInvestmentData = (investments: Investment[] = []) => {
 
       if (projectInvestments.length === 0) return;
 
+      const firstInvestmentDate = projectInvestments[0].date;
       let accumulatedValue = 0;
-      
-      dateRange.forEach((date) => {
-        // Add any new investments on this date
-        const investmentsOnDate = projectInvestments.filter(
-          (inv) => inv.date === date
-        );
-        
-        if (investmentsOnDate.length > 0) {
-          accumulatedValue += investmentsOnDate.reduce(
-            (sum, inv) => sum + inv.amount, 
-            0
-          );
-        }
 
-        // Only start tracking after first investment
-        const firstInvestmentDate = projectInvestments[0].date;
+      dateRange.forEach((date) => {
+        // Only process dates after the first investment
         if (date >= firstInvestmentDate) {
+          // Add any new investments on this date
+          const investmentsOnDate = projectInvestments.filter(
+            (inv) => inv.date === date
+          );
+          
+          if (investmentsOnDate.length > 0) {
+            accumulatedValue += investmentsOnDate.reduce(
+              (sum, inv) => sum + inv.amount, 
+              0
+            );
+          }
+
           // Apply growth/decline after initial investment
           if (accumulatedValue > 0) {
             const monthsSinceLastInvestment = Math.floor(
@@ -125,11 +124,16 @@ export const useInvestmentData = (investments: Investment[] = []) => {
         const projectData = projectTimeSeries[project];
         if (projectData) {
           const matchingPoint = projectData.find(d => d.date === date);
-          dataPoint[project] = matchingPoint ? matchingPoint.price : 0;
+          if (matchingPoint) {
+            dataPoint[project] = matchingPoint.price;
+          }
         }
       });
 
-      chartData.push(dataPoint);
+      // Only add data points that have at least one non-zero value
+      if (Object.values(dataPoint).some(value => value !== 0 && value !== undefined)) {
+        chartData.push(dataPoint);
+      }
     });
 
     console.log("Chart Data:", chartData);
