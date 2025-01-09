@@ -78,9 +78,10 @@ export function InvestmentChart({
                           year: 'numeric'
                         })}
                       </p>
-                      {payload.map((entry, index) => {
-                        const value = Number(entry.value);
-                        return value > 0 ? (
+                      {payload
+                        .filter(entry => entry.value > 0)
+                        .sort((a, b) => (b.value as number) - (a.value as number))
+                        .map((entry, index) => (
                           <p 
                             key={`${entry.name}-${index}`} 
                             className="text-sm text-muted-foreground flex items-center gap-2"
@@ -90,10 +91,9 @@ export function InvestmentChart({
                               style={{ backgroundColor: entry.color }}
                             />
                             <span className="font-medium">{entry.name}:</span>
-                            <span>{formatCurrency(value)}</span>
+                            <span>{formatCurrency(entry.value as number)}</span>
                           </p>
-                        ) : null;
-                      })}
+                        ))}
                     </div>
                   );
                 }
@@ -113,7 +113,7 @@ export function InvestmentChart({
                   stroke={COLORS[index % COLORS.length]}
                   dot={{ r: 4 }}
                   strokeWidth={2}
-                  connectNulls
+                  connectNulls={false}
                   activeDot={{ r: 6, strokeWidth: 2 }}
                 />
               )

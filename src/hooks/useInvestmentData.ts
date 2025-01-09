@@ -27,7 +27,6 @@ export const useInvestmentData = (investments: Investment[] = []) => {
     let currentDate = new Date(startDate);
     while (currentDate <= endDate) {
       dates.add(currentDate.toISOString().split('T')[0]);
-      // Ensure we move to the next month correctly
       currentDate = new Date(
         currentDate.getFullYear(),
         currentDate.getMonth() + 1,
@@ -53,46 +52,49 @@ export const useInvestmentData = (investments: Investment[] = []) => {
       if (projectInvestments.length === 0) return;
 
       const firstInvestmentDate = projectInvestments[0].date;
-      const lastInvestmentDate = projectInvestments[projectInvestments.length - 1].date;
-
       let accumulatedValue = 0;
 
-      dateRange.forEach((date) => {
-        // Before first investment, value is 0
-        if (date < firstInvestmentDate) {
-          series[project].push({ date, price: 0 });
-          return;
-        }
-
-        // Add any new investments on this date
-        const investmentsOnDate = projectInvestments.filter((inv) => inv.date === date);
-        if (investmentsOnDate.length > 0) {
-          accumulatedValue += investmentsOnDate.reduce((sum, inv) => sum + inv.amount, 0);
-        }
-
-        // Apply growth after the last investment date
-        if (date > lastInvestmentDate && accumulatedValue > 0) {
-          const monthsSinceLastInvestment = Math.floor(
-            (new Date(date).getTime() - new Date(lastInvestmentDate).getTime()) / 
-            (1000 * 60 * 60 * 24 * 30.44) // Using average month length
+      // Only start tracking from first investment date
+      dateRange
+        .filter(date => date >= firstInvestmentDate)
+        .forEach((date) => {
+          // Add any new investments on this date
+          const investmentsOnDate = projectInvestments.filter(
+            (inv) => inv.date === date
           );
           
-          // Apply monthly growth with some variability
-          const baseGrowthRate = 0.008; // 0.8% base monthly growth
-          const marketConditionFactor = Math.sin(new Date(date).getTime()) * 0.002;
-          const monthlyGrowthRate = Math.max(0.001, baseGrowthRate + marketConditionFactor);
-          
-          accumulatedValue *= Math.pow(1 + monthlyGrowthRate, monthsSinceLastInvestment);
-        }
+          if (investmentsOnDate.length > 0) {
+            accumulatedValue += investmentsOnDate.reduce(
+              (sum, inv) => sum + inv.amount, 
+              0
+            );
+          }
 
-        series[project].push({
-          date,
-          price: Math.round(accumulatedValue)
+          // Apply growth after initial investment
+          if (accumulatedValue > 0) {
+            const monthsSinceLastInvestment = Math.floor(
+              (new Date(date).getTime() - new Date(firstInvestmentDate).getTime()) / 
+              (1000 * 60 * 60 * 24 * 30.44)
+            );
+            
+            // Apply monthly growth with project-specific variability
+            const baseGrowthRate = 0.01; // 1% base monthly growth
+            const projectRiskFactor = (uniqueProjects.indexOf(project) + 1) * 0.002;
+            const monthlyGrowthRate = baseGrowthRate + projectRiskFactor;
+            
+            const growthMultiplier = Math.pow(1 + monthlyGrowthRate, monthsSinceLastInvestment);
+            accumulatedValue *= growthMultiplier;
+          }
+
+          series[project].push({
+            date,
+            price: Math.round(accumulatedValue)
+          });
         });
-      });
+
+      console.log(`Project ${project} time series:`, series[project]);
     });
 
-    console.log("Project Time Series:", series);
     return series;
   }, [uniqueProjects, dateRange, investments]);
 
@@ -103,19 +105,31 @@ export const useInvestmentData = (investments: Investment[] = []) => {
     console.log("Selected investments:", selectedInvestments);
 
     const activeProjects = showAll ? uniqueProjects : selectedInvestments;
+    const chartData: any[] = [];
 
-    const chartData = dateRange.map((date) => {
+    // Only include dates where at least one project has data
+    const relevantDates = new Set<string>();
+    activeProjects.forEach(project => {
+      const projectData = projectTimeSeries[project];
+      if (projectData) {
+        projectData.forEach(point => relevantDates.add(point.date));
+      }
+    });
+
+    Array.from(relevantDates).sort().forEach(date => {
       const dataPoint: { [key: string]: any } = { date };
-
-      uniqueProjects.forEach((project) => {
+      
+      uniqueProjects.forEach(project => {
         const projectData = projectTimeSeries[project];
         if (!projectData) return;
 
-        const matchingPoint = projectData.find((d) => d.date === date);
-        dataPoint[project] = matchingPoint ? matchingPoint.price : 0;
+        const matchingPoint = projectData.find(d => d.date === date);
+        if (matchingPoint) {
+          dataPoint[project] = matchingPoint.price;
+        }
       });
 
-      return dataPoint;
+      chartData.push(dataPoint);
     });
 
     console.log("Chart Data:", chartData);
