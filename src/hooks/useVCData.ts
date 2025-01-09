@@ -24,7 +24,7 @@ export function useVCData() {
     queryFn: async (): Promise<VC[]> => {
       try {
         console.log("Fetching VC data from CryptoRank...");
-        const response = await fetchCryptoRankData("/funds", {
+        const response = await fetchCryptoRankData("/investors", {
           limit: 10,
           sortBy: "aum",
           sortDirection: "desc",
