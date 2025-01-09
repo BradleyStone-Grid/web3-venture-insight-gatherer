@@ -40,7 +40,7 @@ export function InvestmentChart({
   
   return (
     <Card className="p-4">
-      <h4 className="text-sm font-medium mb-4">Investment History</h4>
+      <h4 className="text-sm font-medium mb-4">Investment Growth Tracking</h4>
       <div className="h-[400px]">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart
@@ -78,9 +78,10 @@ export function InvestmentChart({
                           year: 'numeric'
                         })}
                       </p>
-                      {payload.map((entry, index) => {
-                        const value = Number(entry.value);
-                        return value > 0 ? (
+                      {payload
+                        .filter(entry => Number(entry.value) > 0)
+                        .sort((a, b) => Number(b.value) - Number(a.value))
+                        .map((entry, index) => (
                           <p 
                             key={`${entry.name}-${index}`} 
                             className="text-sm text-muted-foreground flex items-center gap-2"
@@ -90,10 +91,9 @@ export function InvestmentChart({
                               style={{ backgroundColor: entry.color }}
                             />
                             <span className="font-medium">{entry.name}:</span>
-                            <span>{formatCurrency(value)}</span>
+                            <span>{formatCurrency(Number(entry.value))}</span>
                           </p>
-                        ) : null;
-                      })}
+                        ))}
                     </div>
                   );
                 }
