@@ -38,6 +38,18 @@ export function InvestmentChart({
   console.log("Chart Render - Data:", data);
   console.log("Chart Render - Selected Projects:", selectedInvestments);
   
+  // Calculate the maximum value from the data for all selected investments
+  const maxValue = Math.max(
+    ...data.flatMap(entry => 
+      Object.entries(entry)
+        .filter(([key]) => key !== 'date' && selectedInvestments.includes(key))
+        .map(([, value]) => typeof value === 'number' ? value : 0)
+    )
+  );
+
+  // Round up to the nearest million for the domain max
+  const domainMax = Math.ceil(maxValue / 1000000) * 1000000;
+  
   return (
     <Card className="p-4">
       <h4 className="text-sm font-medium mb-4">Investment History</h4>
@@ -66,6 +78,7 @@ export function InvestmentChart({
                 return typeof value === 'number' ? `$${(value / 1000).toFixed(1)}K` : '0';
               }}
               width={80}
+              domain={[0, domainMax]}
             />
             <Tooltip
               content={({ active, payload, label }) => {
