@@ -46,6 +46,12 @@ export function VCDetailsView({
   const [showAll, setShowAll] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
+  // Move uniqueProjects calculation before it's used
+  const uniqueProjects = useMemo(() => 
+    [...new Set(investments.map(inv => inv.project))],
+    [investments]
+  );
+
   // Generate date range for the chart
   const mockPriceData = useMemo(() => {
     if (!investments || investments.length === 0) return [];
@@ -119,12 +125,7 @@ export function VCDetailsView({
       
       return dataPoint;
     });
-  }, [mockPriceData, projectTimeSeries, showAll, selectedInvestments]);
-
-  const uniqueProjects = useMemo(() => 
-    [...new Set(investments.map(inv => inv.project))],
-    [investments]
-  );
+  }, [mockPriceData, projectTimeSeries, showAll, selectedInvestments, uniqueProjects]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
