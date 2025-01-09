@@ -20,7 +20,10 @@ export const fetchCryptoRankData = async (endpoint: string, params: Record<strin
 
   const queryParams = new URLSearchParams(params);
 
-  const url = `https://api.cryptorank.io/v2${endpoint}?${queryParams}`;
+  // Remove the /v2 prefix since it's already in the base URL
+  const cleanEndpoint = endpoint.replace('/v2/', '/').replace('/v2', '');
+  
+  const url = `https://api.cryptorank.io/v2${cleanEndpoint}?${queryParams}`;
   console.log('Fetching CryptoRank data:', url);
   
   try {
