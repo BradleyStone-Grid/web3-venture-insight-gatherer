@@ -33,9 +33,9 @@ export const useInvestmentData = (investments: Investment[] = []) => {
 
   // Create project time series with accumulated investments and growth
   const projectTimeSeries = useMemo(() => {
-    const series: Record<string, { date: string; price: number | null }[]> = {};
+    const series: Record<string, { date: string; price: number }[]> = {};
     
-    // Initialize series for each project
+    // Process each project separately
     uniqueProjects.forEach(project => {
       const projectInvestments = investments
         .filter(inv => inv.project === project)
@@ -44,12 +44,13 @@ export const useInvestmentData = (investments: Investment[] = []) => {
       if (projectInvestments.length === 0) return;
 
       const firstInvestmentDate = projectInvestments[0].date;
+      series[project] = [];
       let accumulatedValue = 0;
-      
-      // Create series for this project starting from its first investment
-      series[project] = dateRange
+
+      // Process each date for this project
+      dateRange
         .filter(date => date >= firstInvestmentDate)
-        .map(date => {
+        .forEach(date => {
           // Find investments on this date
           const investmentsOnDate = projectInvestments.filter(inv => inv.date === date);
           
@@ -58,20 +59,18 @@ export const useInvestmentData = (investments: Investment[] = []) => {
             accumulatedValue += investmentsOnDate.reduce((sum, inv) => sum + inv.amount, 0);
           }
 
-          // Create data point
-          const dataPoint = {
+          // Add data point
+          series[project].push({
             date,
-            price: accumulatedValue > 0 ? Math.round(accumulatedValue) : null
-          };
+            price: Math.round(accumulatedValue)
+          });
 
-          // Apply growth for future dates
+          // Apply growth for future dates (5-10% range)
           if (date !== dateRange[dateRange.length - 1]) {
             const growthSeed = new Date(date).getTime();
-            const randomGrowth = (Math.sin(growthSeed) + 1) * 0.05; // 0% to 10% growth
+            const randomGrowth = 0.05 + (Math.sin(growthSeed) + 1) * 0.025; // 5-10% growth
             accumulatedValue *= (1 + randomGrowth);
           }
-
-          return dataPoint;
         });
     });
 
@@ -91,7 +90,7 @@ export const useInvestmentData = (investments: Investment[] = []) => {
         if (!projectData) return;
         
         const matchingPoint = projectData.find(d => d.date === date);
-        if (matchingPoint && matchingPoint.price !== null) {
+        if (matchingPoint) {
           dataPoint[project] = matchingPoint.price;
         }
       });
