@@ -12,6 +12,9 @@ interface PortfolioCompany {
   name: string;
   logo: string;
   profileUrl: string;
+  sector: string[];
+  investmentDate: string | null;
+  investmentStage: string;
 }
 
 interface VC {
@@ -36,7 +39,6 @@ export function useVCData() {
         console.log("Fetching VC data from CryptoRank...");
         const response = await fetchCryptoRankData("/funds", {
           limit: 10,
-          sortDirection: "desc",
         });
 
         console.log("Raw CryptoRank response:", response);
