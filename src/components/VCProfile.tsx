@@ -3,8 +3,6 @@ import { Badge } from "@/components/ui/badge";
 import { ExternalLink, TrendingUp, Users, Globe, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { MoonIcon, SunIcon } from "lucide-react";
-import { useTheme } from "next-themes";
 import { useState } from "react";
 import { VCDetailsView } from "./VCDetailsView";
 
@@ -43,12 +41,16 @@ export function VCProfile({
   investmentStage = [],
   portfolioCompanies = [],
 }: VCProfileProps) {
-  const { setTheme, theme } = useTheme();
   const [showDetails, setShowDetails] = useState(false);
 
-  const toggleTheme = () => {
-    setTheme(theme === "light" ? "dark" : "light");
-  };
+  // Mock investment data for the graph
+  const mockInvestments = [
+    { date: "2023-01", amount: 1000000, round: "Seed", project: "Project A", assetPrice: 2000 },
+    { date: "2023-03", amount: 2000000, round: "Series A", project: "Project B", assetPrice: 2200 },
+    { date: "2023-06", amount: 3000000, round: "Series B", project: "Project C", assetPrice: 2400 },
+    { date: "2023-09", amount: 4000000, round: "Series C", project: "Project D", assetPrice: 2600 },
+    { date: "2023-12", amount: 5000000, round: "Series D", project: "Project E", assetPrice: 2800 },
+  ];
 
   return (
     <>
@@ -80,16 +82,6 @@ export function VCProfile({
                 </a>
               </div>
             </div>
-            <Button
-              variant="outline"
-              size="icon"
-              className="ml-4"
-              onClick={toggleTheme}
-            >
-              <SunIcon className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-              <MoonIcon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-              <span className="sr-only">Toggle theme</span>
-            </Button>
           </div>
           <p className="text-sm text-muted-foreground">{description}</p>
         </CardHeader>
@@ -213,7 +205,7 @@ export function VCProfile({
         description={description}
         aum={aum}
         website={website}
-        investments={[]} // You'll need to pass real investment data here
+        investments={mockInvestments}
       />
     </>
   );
