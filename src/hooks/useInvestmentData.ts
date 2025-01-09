@@ -37,14 +37,16 @@ export const useInvestmentData = (investments: Investment[] = []) => {
     return Array.from(dates).sort();
   }, [investments]);
 
-  // Create project time series with accumulated investments and realistic growth/decline
+  // Create project time series with accumulated investments
   const projectTimeSeries = useMemo(() => {
     console.log("Processing investment data...");
     const series: { [key: string]: { date: string; price: number }[] } = {};
 
+    // Initialize series for each project
     uniqueProjects.forEach((project) => {
       series[project] = [];
       
+      // Get all investments for this project, sorted by date
       const projectInvestments = investments
         .filter((inv) => inv.project === project)
         .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
@@ -54,6 +56,7 @@ export const useInvestmentData = (investments: Investment[] = []) => {
       const firstInvestmentDate = projectInvestments[0].date;
       let accumulatedValue = 0;
 
+      // Process each date in the range
       dateRange.forEach((date) => {
         // Only process dates after the first investment
         if (date >= firstInvestmentDate) {
@@ -62,22 +65,21 @@ export const useInvestmentData = (investments: Investment[] = []) => {
             (inv) => inv.date === date
           );
           
-          if (investmentsOnDate.length > 0) {
-            accumulatedValue += investmentsOnDate.reduce(
-              (sum, inv) => sum + inv.amount, 
-              0
-            );
-          }
+          // Accumulate new investments
+          accumulatedValue += investmentsOnDate.reduce(
+            (sum, inv) => sum + inv.amount,
+            0
+          );
 
-          // Apply growth/decline after initial investment
+          // Apply growth after initial investment
           if (accumulatedValue > 0) {
             const monthsSinceLastInvestment = Math.floor(
-              (new Date(date).getTime() - new Date(firstInvestmentDate).getTime()) / 
+              (new Date(date).getTime() - new Date(firstInvestmentDate).getTime()) /
               (1000 * 60 * 60 * 24 * 30.44)
             );
             
-            // Apply consistent monthly growth/decline for all projects
-            const baseGrowthRate = 0.002; // 0.2% base monthly growth
+            // Apply consistent monthly growth
+            const baseGrowthRate = 0.002; // 0.2% monthly growth
             const volatilityFactor = Math.sin(monthsSinceLastInvestment * 0.3) * 0.001;
             const monthlyRate = baseGrowthRate + volatilityFactor;
             
@@ -85,6 +87,7 @@ export const useInvestmentData = (investments: Investment[] = []) => {
             accumulatedValue *= growthMultiplier;
           }
 
+          // Add the data point
           series[project].push({
             date,
             price: Math.round(accumulatedValue)
@@ -130,10 +133,7 @@ export const useInvestmentData = (investments: Investment[] = []) => {
         }
       });
 
-      // Only add data points that have at least one non-zero value
-      if (Object.values(dataPoint).some(value => value !== 0 && value !== undefined)) {
-        chartData.push(dataPoint);
-      }
+      chartData.push(dataPoint);
     });
 
     console.log("Chart Data:", chartData);
