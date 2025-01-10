@@ -19,11 +19,8 @@ export const fetchCryptoRankData = async (endpoint: string, params: Record<strin
   }
 
   const queryParams = new URLSearchParams(params);
+  const url = `https://api.cryptorank.io${endpoint}?${queryParams}`;
   
-  // Clean the endpoint by removing any version prefixes and ensuring it starts with a slash
-  const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
-  
-  const url = `https://api.cryptorank.io${cleanEndpoint}?${queryParams}`;
   console.log('Fetching CryptoRank data:', url);
   console.log('Request headers:', { 'x-api-key': apiKey });
   
@@ -36,9 +33,9 @@ export const fetchCryptoRankData = async (endpoint: string, params: Record<strin
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
-      console.error('CryptoRank API error response:', errorData);
-      throw new Error(errorData.message || 'Failed to fetch data from CryptoRank');
+      const errorText = await response.text();
+      console.error('CryptoRank API error response:', errorText);
+      throw new Error(`Failed to fetch data: ${errorText}`);
     }
 
     const data = await response.json();
