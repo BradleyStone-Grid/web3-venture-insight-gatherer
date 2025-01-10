@@ -19,12 +19,13 @@ export const fetchCryptoRankData = async (endpoint: string, params: Record<strin
   }
 
   const queryParams = new URLSearchParams(params);
-
-  // Remove the /v2 prefix since it's already in the base URL
-  const cleanEndpoint = endpoint.replace('/v2/', '/').replace('/v2', '');
   
-  const url = `https://api.cryptorank.io/v2${cleanEndpoint}?${queryParams}`;
+  // Clean the endpoint by removing any version prefixes and ensuring it starts with a slash
+  const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+  
+  const url = `https://api.cryptorank.io${cleanEndpoint}?${queryParams}`;
   console.log('Fetching CryptoRank data:', url);
+  console.log('Request headers:', { 'x-api-key': apiKey });
   
   try {
     const response = await fetch(url, {
